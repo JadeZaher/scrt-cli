@@ -33,7 +33,11 @@ pub struct Source {
 
 impl Source {
     pub fn file(id: impl Into<String>) -> Self {
-        Source { id: id.into(), source_type: SourceType::File, label: None }
+        Source {
+            id: id.into(),
+            source_type: SourceType::File,
+            label: None,
+        }
     }
 }
 
@@ -315,7 +319,10 @@ mod tests {
     fn source_label_omitted_when_none() {
         let s = Source::file("a.txt");
         let json = serde_json::to_string(&s).unwrap();
-        assert!(!json.contains("label"), "label must be omitted when None: {json}");
+        assert!(
+            !json.contains("label"),
+            "label must be omitted when None: {json}"
+        );
     }
 
     #[test]
@@ -325,8 +332,16 @@ mod tests {
         assert_eq!(
             keys,
             vec![
-                "id", "source", "match_line", "start_line", "end_line",
-                "context_before", "match_text", "context_after", "match_spans", "tokens",
+                "id",
+                "source",
+                "match_line",
+                "start_line",
+                "end_line",
+                "context_before",
+                "match_text",
+                "context_after",
+                "match_spans",
+                "tokens",
             ]
         );
     }

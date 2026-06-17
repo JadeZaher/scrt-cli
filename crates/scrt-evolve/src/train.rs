@@ -52,7 +52,8 @@ pub fn train_adapter(
 ) -> Result<TrainReport, TrainError> {
     use candle_core::Device;
 
-    cfg.validate_model().map_err(|e| TrainError::ModelLoad(e.to_string()))?;
+    cfg.validate_model()
+        .map_err(|e| TrainError::ModelLoad(e.to_string()))?;
     if rows.is_empty() {
         return Err(TrainError::Train(
             "corpus is empty — stash some searches with notes first".into(),

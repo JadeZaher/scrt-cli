@@ -55,7 +55,10 @@ mod tests {
     #[test]
     fn adapter_path_shape() {
         let p = default_adapter_path(std::path::Path::new("/proj"), "default");
-        assert!(p.ends_with("embeddings/default.safetensors") || p.ends_with("embeddings\\default.safetensors"));
+        assert!(
+            p.ends_with("embeddings/default.safetensors")
+                || p.ends_with("embeddings\\default.safetensors")
+        );
     }
 
     #[test]

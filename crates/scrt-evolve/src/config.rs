@@ -174,7 +174,10 @@ mod tests {
     #[test]
     fn missing_config_is_not_found() {
         let p = PathBuf::from("/nonexistent/.scrt/evolve.toml");
-        assert!(matches!(EvolveConfig::load(&p), Err(ConfigError::NotFound(_))));
+        assert!(matches!(
+            EvolveConfig::load(&p),
+            Err(ConfigError::NotFound(_))
+        ));
     }
 
     #[test]

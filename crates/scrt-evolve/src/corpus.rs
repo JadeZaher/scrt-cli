@@ -37,7 +37,9 @@ pub struct CorpusOptions {
 
 impl Default for CorpusOptions {
     fn default() -> Self {
-        CorpusOptions { negatives_per_row: 4 }
+        CorpusOptions {
+            negatives_per_row: 4,
+        }
     }
 }
 
@@ -142,17 +144,48 @@ mod tests {
     }
 
     fn meta() -> StashSearch {
-        StashSearch { pattern: "p".into(), effort: "normal".into(), sources_count: 1 }
+        StashSearch {
+            pattern: "p".into(),
+            effort: "normal".into(),
+            sources_count: 1,
+        }
     }
 
     #[test]
     fn corpus_rows_have_query_positive_negatives() {
         let clock = SystemClock;
         let mut p = Palace::empty();
-        add_stash(&mut p, &clock, "auth", "authentication TODOs", &[node("// TODO auth", 1)], meta(), &[], &[], &StashOptions::default()).unwrap();
-        add_stash(&mut p, &clock, "db", "database notes", &[node("// db pool", 1), node("// db cache", 2)], meta(), &[], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "auth",
+            "authentication TODOs",
+            &[node("// TODO auth", 1)],
+            meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "db",
+            "database notes",
+            &[node("// db pool", 1), node("// db cache", 2)],
+            meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
 
-        let rows = build_corpus(&p, CorpusOptions { negatives_per_row: 2 });
+        let rows = build_corpus(
+            &p,
+            CorpusOptions {
+                negatives_per_row: 2,
+            },
+        );
         // 1 (auth) + 2 (db) nodes = 3 rows, each with a note query.
         assert_eq!(rows.len(), 3);
         let auth = rows.iter().find(|r| r.stash == "auth").unwrap();
@@ -166,8 +199,30 @@ mod tests {
     fn empty_note_stashes_skipped() {
         let clock = SystemClock;
         let mut p = Palace::empty();
-        add_stash(&mut p, &clock, "noted", "has a note", &[node("x", 1)], meta(), &[], &[], &StashOptions::default()).unwrap();
-        add_stash(&mut p, &clock, "blank", "", &[node("y", 1)], meta(), &[], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "noted",
+            "has a note",
+            &[node("x", 1)],
+            meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "blank",
+            "",
+            &[node("y", 1)],
+            meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
         let rows = build_corpus(&p, CorpusOptions::default());
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].stash, "noted");
@@ -177,7 +232,18 @@ mod tests {
     fn jsonl_is_one_object_per_line() {
         let clock = SystemClock;
         let mut p = Palace::empty();
-        add_stash(&mut p, &clock, "a", "note a", &[node("x", 1)], meta(), &[], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "a",
+            "note a",
+            &[node("x", 1)],
+            meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
         let rows = build_corpus(&p, CorpusOptions::default());
         let jsonl = to_jsonl(&rows);
         assert_eq!(jsonl.lines().count(), rows.len());

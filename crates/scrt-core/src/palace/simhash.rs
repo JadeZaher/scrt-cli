@@ -177,9 +177,7 @@ pub fn sidecar_path(palace_path: &Path) -> PathBuf {
 pub fn load_sidecar(palace_path: &Path) -> FingerprintSidecar {
     let path = sidecar_path(palace_path);
     match std::fs::read_to_string(&path) {
-        Ok(raw) if !raw.trim().is_empty() => {
-            serde_json::from_str(&raw).unwrap_or_default()
-        }
+        Ok(raw) if !raw.trim().is_empty() => serde_json::from_str(&raw).unwrap_or_default(),
         _ => FingerprintSidecar::default(),
     }
 }
@@ -222,7 +220,11 @@ pub fn reconcile(palace: &Palace, sidecar: &FingerprintSidecar) -> (FingerprintS
         }
     }
     // Dropped stashes: present in old sidecar, absent from palace.
-    if sidecar.by_stash.keys().any(|k| !palace.stashes.contains_key(k)) {
+    if sidecar
+        .by_stash
+        .keys()
+        .any(|k| !palace.stashes.contains_key(k))
+    {
         changed = true;
     }
     (out, changed)
@@ -248,7 +250,12 @@ pub fn fingerprint_stash(stash: &Stash) -> Fingerprint {
     } else {
         simhash(&project(&full_text, dtype))
     };
-    Fingerprint { note, full_prose, full_typed, dtype }
+    Fingerprint {
+        note,
+        full_prose,
+        full_typed,
+        dtype,
+    }
 }
 
 /// Compute the FULL signature: the scalar fingerprint **plus** the chunked
@@ -263,7 +270,11 @@ pub fn signature_stash(stash: &Stash) -> StashSignature {
     };
     let chunks = chunk_set(&full_text, scalar.dtype);
     let vector = vector_set(&full_text, scalar.dtype);
-    StashSignature { scalar, chunks: Some(chunks), vector: Some(vector) }
+    StashSignature {
+        scalar,
+        chunks: Some(chunks),
+        vector: Some(vector),
+    }
 }
 
 /// Build the chunked fingerprint for a body of text on both axes.
@@ -281,7 +292,12 @@ fn chunk_set(full_text: &str, dtype: DataType) -> ChunkSet {
     } else {
         minhash_of(&typed)
     };
-    ChunkSet { prose, typed, prose_minhash, typed_minhash }
+    ChunkSet {
+        prose,
+        typed,
+        prose_minhash,
+        typed_minhash,
+    }
 }
 
 /// Build the random-projection vectors for a body of text on both axes.
@@ -455,9 +471,7 @@ fn sniff_data_type(body: &str) -> DataType {
         return DataType::Log;
     }
     // Code heuristic: presence of common syntax markers across lines.
-    let code_markers = body
-        .matches([';', '{', '}', '(', ')'])
-        .count();
+    let code_markers = body.matches([';', '{', '}', '(', ')']).count();
     if code_markers * 12 >= body.len().max(1) {
         return DataType::Code;
     }
@@ -516,7 +530,9 @@ fn prose_shingles(text: &str) -> Vec<String> {
 /// identifiers/keywords (order-independent); 2-grams add local structure.
 fn code_shingles(text: &str) -> Vec<String> {
     let tokens: Vec<String> = text
-        .split(|c: char| c.is_whitespace() || matches!(c, '(' | ')' | '{' | '}' | '[' | ']' | ';' | ',' | '.'))
+        .split(|c: char| {
+            c.is_whitespace() || matches!(c, '(' | ')' | '{' | '}' | '[' | ']' | ';' | ',' | '.')
+        })
         .filter(|t| !t.is_empty())
         .map(normalize_ident)
         .collect();
@@ -596,7 +612,11 @@ fn collect_key_paths(v: &serde_json::Value, prefix: String, out: &mut Vec<String
     match v {
         serde_json::Value::Object(map) => {
             for (k, child) in map {
-                let path = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+                let path = if prefix.is_empty() {
+                    k.clone()
+                } else {
+                    format!("{prefix}.{k}")
+                };
                 out.push(path.clone());
                 collect_key_paths(child, path, out);
             }
@@ -893,7 +913,10 @@ impl SimQuery {
                 prose_minhash: prose_minhash.clone(),
                 typed_minhash: prose_minhash,
             },
-            vector: StashVector { prose: prose_vec.clone(), typed: prose_vec },
+            vector: StashVector {
+                prose: prose_vec.clone(),
+                typed: prose_vec,
+            },
         }
     }
 }
@@ -951,9 +974,19 @@ pub fn rank_similar(
             let chunked = if axis == MatchAxis::Full {
                 sig.chunks.as_ref().and_then(|cand| {
                     let (q_chunks, q_mh, c_chunks, c_mh) = if use_typed {
-                        (&query.chunks.typed, &query.chunks.typed_minhash, &cand.typed, &cand.typed_minhash)
+                        (
+                            &query.chunks.typed,
+                            &query.chunks.typed_minhash,
+                            &cand.typed,
+                            &cand.typed_minhash,
+                        )
                     } else {
-                        (&query.chunks.prose, &query.chunks.prose_minhash, &cand.prose, &cand.prose_minhash)
+                        (
+                            &query.chunks.prose,
+                            &query.chunks.prose_minhash,
+                            &cand.prose,
+                            &cand.prose_minhash,
+                        )
                     };
                     if q_chunks.is_empty() || c_chunks.is_empty() {
                         return None;
@@ -986,10 +1019,18 @@ pub fn rank_similar(
 
             let (base, method, best_pair, jaccard) = match (cos, chunked) {
                 (Some(c), _) => (c, SimMethod::RandProj, None, None),
-                (None, Some((bp, jac))) => {
-                    (blend_chunk_score(bp, jac), SimMethod::Chunked, Some(bp), Some(jac))
-                }
-                (None, None) => (1.0 - (distance as f64 / 64.0), SimMethod::Scalar, None, None),
+                (None, Some((bp, jac))) => (
+                    blend_chunk_score(bp, jac),
+                    SimMethod::Chunked,
+                    Some(bp),
+                    Some(jac),
+                ),
+                (None, None) => (
+                    1.0 - (distance as f64 / 64.0),
+                    SimMethod::Scalar,
+                    None,
+                    None,
+                ),
             };
             // `relevance` is the HONEST, method-normalized closeness (0..1) —
             // what's displayed and what a link threshold compares against. The
@@ -1055,21 +1096,32 @@ pub fn suggest_links(
         return Vec::new();
     };
     // Already-linked neighbors (either direction) are not re-suggested.
-    let linked: std::collections::HashSet<String> =
-        super::relations::get_related(palace, new_name)
-            .into_iter()
-            .map(|r| r.stash_name)
-            .collect();
+    let linked: std::collections::HashSet<String> = super::relations::get_related(palace, new_name)
+        .into_iter()
+        .map(|r| r.stash_name)
+        .collect();
 
     let query = SimQuery::from_signature(sig);
     // Neutral score (5) — display relevance is score-independent anyway; we
     // filter on `relevance`, the honest normalized closeness.
-    rank_similar(palace, sidecar, &query, MatchAxis::Full, 5, Some(new_name), None)
-        .into_iter()
-        .filter(|h| h.relevance >= threshold && !linked.contains(&h.name))
-        .take(max)
-        .map(|h| LinkSuggestion { name: h.name, relevance: h.relevance, method: h.method })
-        .collect()
+    rank_similar(
+        palace,
+        sidecar,
+        &query,
+        MatchAxis::Full,
+        5,
+        Some(new_name),
+        None,
+    )
+    .into_iter()
+    .filter(|h| h.relevance >= threshold && !linked.contains(&h.name))
+    .take(max)
+    .map(|h| LinkSuggestion {
+        name: h.name,
+        relevance: h.relevance,
+        method: h.method,
+    })
+    .collect()
 }
 
 /// Map a 1..=10 score to the falloff exponent. Clamped; out-of-range scores
@@ -1142,7 +1194,11 @@ mod tests {
             created_at: "t".into(),
             updated_at: "t".into(),
             expires_at: None,
-            search: StashSearch { pattern: "p".into(), effort: "quick".into(), sources_count: 0 },
+            search: StashSearch {
+                pattern: "p".into(),
+                effort: "quick".into(),
+                sources_count: 0,
+            },
             sources: sources.iter().map(|s| s.to_string()).collect(),
             nodes,
             file_paths: vec![],
@@ -1160,9 +1216,18 @@ mod tests {
 
     #[test]
     fn simhash_similar_text_is_closer_than_unrelated() {
-        let base = simhash(&project("rate limiting for the auth login endpoint", DataType::Prose));
-        let near = simhash(&project("rate limiting on the auth login route", DataType::Prose));
-        let far = simhash(&project("favourite pizza toppings and dessert recipes", DataType::Prose));
+        let base = simhash(&project(
+            "rate limiting for the auth login endpoint",
+            DataType::Prose,
+        ));
+        let near = simhash(&project(
+            "rate limiting on the auth login route",
+            DataType::Prose,
+        ));
+        let far = simhash(&project(
+            "favourite pizza toppings and dessert recipes",
+            DataType::Prose,
+        ));
         assert!(
             hamming(base, near) < hamming(base, far),
             "near={} far={}",
@@ -1173,7 +1238,12 @@ mod tests {
 
     #[test]
     fn fingerprint_has_two_segments_and_id_form() {
-        let s = stash("auth", "auth rate limiting", &["fn login() {}"], &["src/auth.rs"]);
+        let s = stash(
+            "auth",
+            "auth rate limiting",
+            &["fn login() {}"],
+            &["src/auth.rs"],
+        );
         let fp = fingerprint_stash(&s);
         let id = fp.to_id();
         assert!(id.contains('-'));
@@ -1191,8 +1261,10 @@ mod tests {
 
     #[test]
     fn log_templatizing_collapses_volatile_tokens() {
-        let a = templatize_log_line("2026-06-15T10:00:00 ERROR request 4821 failed for ip 10.0.0.3");
-        let b = templatize_log_line("2026-06-15T11:30:00 ERROR request 9999 failed for ip 10.0.0.9");
+        let a =
+            templatize_log_line("2026-06-15T10:00:00 ERROR request 4821 failed for ip 10.0.0.3");
+        let b =
+            templatize_log_line("2026-06-15T11:30:00 ERROR request 9999 failed for ip 10.0.0.9");
         assert_eq!(a, b, "same-shape log lines should templatize identically");
         assert!(a.contains("<*>"));
         assert!(a.contains("error"));
@@ -1214,9 +1286,24 @@ mod tests {
         // Use prose stashes with clearly overlapping vs disjoint vocabulary so
         // the ranking is driven by real shingle overlap, not tiny-input noise.
         let queries = [
-            stash("auth", "auth rate limiting login throttle attempts", &[], &[]),
-            stash("auth2", "rate limiting auth login throttle requests", &[], &[]),
-            stash("pizza", "pizza dessert recipes food toppings cheese", &[], &[]),
+            stash(
+                "auth",
+                "auth rate limiting login throttle attempts",
+                &[],
+                &[],
+            ),
+            stash(
+                "auth2",
+                "rate limiting auth login throttle requests",
+                &[],
+                &[],
+            ),
+            stash(
+                "pizza",
+                "pizza dessert recipes food toppings cheese",
+                &[],
+                &[],
+            ),
         ];
         for s in queries {
             p.stashes.insert(s.name.clone(), s);
@@ -1225,8 +1312,14 @@ mod tests {
         let q = SimQuery::from_signature(&sidecar.by_stash["auth"]);
         let hits = rank_similar(&p, &sidecar, &q, MatchAxis::Full, 5, Some("auth"), None);
         assert_eq!(hits.len(), 2, "self excluded");
-        assert_eq!(hits[0].name, "auth2", "the other auth stash should rank first");
-        assert!(hits[0].relevance >= hits[1].relevance, "ranked by relevance desc");
+        assert_eq!(
+            hits[0].name, "auth2",
+            "the other auth stash should rank first"
+        );
+        assert!(
+            hits[0].relevance >= hits[1].relevance,
+            "ranked by relevance desc"
+        );
     }
 
     #[test]
@@ -1235,13 +1328,21 @@ mod tests {
         // their dtypes differ, so the ranker must fall back to the prose axis
         // (never compare a code SimHash to a json SimHash — that's noise).
         let mut p = Palace::empty();
-        p.stashes.insert("code".into(), stash("code", "n", &["fn f() {}"], &["a.rs"]));
-        p.stashes.insert("json".into(), stash("json", "n", &[r#"{"k":1}"#], &["a.json"]));
+        p.stashes
+            .insert("code".into(), stash("code", "n", &["fn f() {}"], &["a.rs"]));
+        p.stashes.insert(
+            "json".into(),
+            stash("json", "n", &[r#"{"k":1}"#], &["a.json"]),
+        );
         let (sidecar, _) = reconcile(&p, &FingerprintSidecar::default());
         let q = SimQuery::from_signature(&sidecar.by_stash["code"]);
         let hits = rank_similar(&p, &sidecar, &q, MatchAxis::Full, 5, Some("code"), None);
         assert_eq!(hits.len(), 1);
-        assert_eq!(hits[0].axis_used, AxisUsed::FullProse, "cross-type must use prose axis");
+        assert_eq!(
+            hits[0].axis_used,
+            AxisUsed::FullProse,
+            "cross-type must use prose axis"
+        );
     }
 
     #[test]
@@ -1251,7 +1352,12 @@ mod tests {
         let mut p = Palace::empty();
         p.stashes.insert(
             "auth".into(),
-            stash("auth", "auth rate limiting login", &["fn login() {}"], &["a.rs"]),
+            stash(
+                "auth",
+                "auth rate limiting login",
+                &["fn login() {}"],
+                &["a.rs"],
+            ),
         );
         let (sidecar, _) = reconcile(&p, &FingerprintSidecar::default());
         let q = SimQuery::from_term("auth rate limiting login");
@@ -1260,7 +1366,11 @@ mod tests {
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].axis_used, AxisUsed::FullProse);
         // The term equals the note text, so prose-full distance should be small.
-        assert!(hits[0].distance < 32, "distance {} should be well under half", hits[0].distance);
+        assert!(
+            hits[0].distance < 32,
+            "distance {} should be well under half",
+            hits[0].distance
+        );
     }
 
     #[test]
@@ -1305,7 +1415,11 @@ mod tests {
         let s = stash("long", "note", &long, &[]);
         let sig = signature_stash(&s);
         let chunks = sig.chunks.unwrap();
-        assert!(chunks.prose.len() > 1, "long body should window into >1 chunk, got {}", chunks.prose.len());
+        assert!(
+            chunks.prose.len() > 1,
+            "long body should window into >1 chunk, got {}",
+            chunks.prose.len()
+        );
         assert_eq!(chunks.prose_minhash.len(), MINHASH_K);
 
         let short = stash("short", "note", &["only a few words here"], &[]);
@@ -1318,18 +1432,39 @@ mod tests {
         // q shares its FIRST chunk's content with cand, but the rest differs.
         // best-pair should score high (a shared section), whereas a whole-stash
         // SimHash would be dragged down by the unrelated remainder.
-        let shared = simhash(&project("auth rate limit login throttle attempts handler", DataType::Prose));
-        let q = vec![shared, simhash(&project("totally different filler words here", DataType::Prose))];
-        let cand = vec![
-            simhash(&project("unrelated header preamble lines about something", DataType::Prose)),
+        let shared = simhash(&project(
+            "auth rate limit login throttle attempts handler",
+            DataType::Prose,
+        ));
+        let q = vec![
             shared,
-            simhash(&project("more unrelated trailing content at the end", DataType::Prose)),
+            simhash(&project(
+                "totally different filler words here",
+                DataType::Prose,
+            )),
+        ];
+        let cand = vec![
+            simhash(&project(
+                "unrelated header preamble lines about something",
+                DataType::Prose,
+            )),
+            shared,
+            simhash(&project(
+                "more unrelated trailing content at the end",
+                DataType::Prose,
+            )),
         ];
         let bp = best_pair_similarity(&q, &cand);
-        assert!(bp > 0.9, "shared section should yield high best-pair, got {bp}");
+        assert!(
+            bp > 0.9,
+            "shared section should yield high best-pair, got {bp}"
+        );
 
         // No shared chunk → low best-pair.
-        let disjoint = vec![simhash(&project("xray yankee zulu quebec foxtrot", DataType::Prose))];
+        let disjoint = vec![simhash(&project(
+            "xray yankee zulu quebec foxtrot",
+            DataType::Prose,
+        ))];
         let bp2 = best_pair_similarity(&q, &disjoint);
         assert!(bp2 < bp, "disjoint should score lower ({bp2} < {bp})");
     }
@@ -1338,14 +1473,24 @@ mod tests {
     fn minhash_jaccard_high_for_near_dup_low_for_distinct() {
         let body_a = ["the quick brown fox jumps over the lazy dog again and again today"];
         let body_b = ["the quick brown fox jumps over the lazy dog again and again today"]; // identical
-        let body_c = ["completely different sentence with no shared vocabulary whatsoever here now"];
-        let a = signature_stash(&stash("a", "n", &body_a, &[])).chunks.unwrap();
-        let b = signature_stash(&stash("b", "n", &body_b, &[])).chunks.unwrap();
-        let c = signature_stash(&stash("c", "n", &body_c, &[])).chunks.unwrap();
+        let body_c =
+            ["completely different sentence with no shared vocabulary whatsoever here now"];
+        let a = signature_stash(&stash("a", "n", &body_a, &[]))
+            .chunks
+            .unwrap();
+        let b = signature_stash(&stash("b", "n", &body_b, &[]))
+            .chunks
+            .unwrap();
+        let c = signature_stash(&stash("c", "n", &body_c, &[]))
+            .chunks
+            .unwrap();
         let dup = minhash_jaccard(&a.prose_minhash, &b.prose_minhash);
         let diff = minhash_jaccard(&a.prose_minhash, &c.prose_minhash);
         assert!(dup > 0.9, "near-dup jaccard should be high, got {dup}");
-        assert!(diff < dup, "distinct jaccard {diff} should be below dup {dup}");
+        assert!(
+            diff < dup,
+            "distinct jaccard {diff} should be below dup {dup}"
+        );
     }
 
     #[test]
@@ -1354,59 +1499,105 @@ mod tests {
         // nothing. With chunking, the shared section should rank auth-test
         // first even though each stash also has unrelated lines.
         let mut p = Palace::empty();
-        p.stashes.insert("auth-impl".into(), stash(
-            "auth-impl",
-            "auth login implementation",
-            &["fn check_auth_rate_limit() { throttle_login_attempts(); }",
-              "fn unrelated_helper_one() { do_something_else_entirely(); }"],
-            &["auth.rs"],
-        ));
-        p.stashes.insert("auth-test".into(), stash(
-            "auth-test",
-            "auth login tests",
-            &["fn test_misc() { assert_unrelated_thing(); }",
-              "fn check_auth_rate_limit() { throttle_login_attempts(); }"],
-            &["auth_test.rs"],
-        ));
-        p.stashes.insert("pizza".into(), stash(
-            "pizza",
-            "pizza recipes",
-            &["best pizza dessert toppings cheese and favourite food recipes here"],
-            &["food.md"],
-        ));
+        p.stashes.insert(
+            "auth-impl".into(),
+            stash(
+                "auth-impl",
+                "auth login implementation",
+                &[
+                    "fn check_auth_rate_limit() { throttle_login_attempts(); }",
+                    "fn unrelated_helper_one() { do_something_else_entirely(); }",
+                ],
+                &["auth.rs"],
+            ),
+        );
+        p.stashes.insert(
+            "auth-test".into(),
+            stash(
+                "auth-test",
+                "auth login tests",
+                &[
+                    "fn test_misc() { assert_unrelated_thing(); }",
+                    "fn check_auth_rate_limit() { throttle_login_attempts(); }",
+                ],
+                &["auth_test.rs"],
+            ),
+        );
+        p.stashes.insert(
+            "pizza".into(),
+            stash(
+                "pizza",
+                "pizza recipes",
+                &["best pizza dessert toppings cheese and favourite food recipes here"],
+                &["food.md"],
+            ),
+        );
         let (sidecar, _) = reconcile(&p, &FingerprintSidecar::default());
         let q = SimQuery::from_signature(&sidecar.by_stash["auth-impl"]);
-        let hits = rank_similar(&p, &sidecar, &q, MatchAxis::Full, 5, Some("auth-impl"), None);
+        let hits = rank_similar(
+            &p,
+            &sidecar,
+            &q,
+            MatchAxis::Full,
+            5,
+            Some("auth-impl"),
+            None,
+        );
         assert_eq!(hits.len(), 2);
-        assert_eq!(hits[0].name, "auth-test", "shared code section should rank first");
-        assert_eq!(hits[0].method, SimMethod::Chunked, "full axis with chunks uses the chunked path");
+        assert_eq!(
+            hits[0].name, "auth-test",
+            "shared code section should rank first"
+        );
+        assert_eq!(
+            hits[0].method,
+            SimMethod::Chunked,
+            "full axis with chunks uses the chunked path"
+        );
         assert!(hits[0].best_pair.unwrap() > hits[1].best_pair.unwrap());
     }
 
     #[test]
     fn suggest_links_returns_related_above_threshold_excluding_linked() {
         let mut p = Palace::empty();
-        p.stashes.insert("auth-impl".into(), stash(
-            "auth-impl",
-            "auth login rate limit throttle implementation",
-            &["fn check_auth_rate_limit() { throttle_login_attempts(); }"],
-            &["auth.rs"],
-        ));
-        p.stashes.insert("auth-test".into(), stash(
-            "auth-test",
-            "auth login rate limit throttle tests",
-            &["fn check_auth_rate_limit() { throttle_login_attempts(); }"],
-            &["auth_test.rs"],
-        ));
-        p.stashes.insert("pizza".into(), stash(
-            "pizza", "pizza dessert food recipes toppings cheese", &[], &[],
-        ));
+        p.stashes.insert(
+            "auth-impl".into(),
+            stash(
+                "auth-impl",
+                "auth login rate limit throttle implementation",
+                &["fn check_auth_rate_limit() { throttle_login_attempts(); }"],
+                &["auth.rs"],
+            ),
+        );
+        p.stashes.insert(
+            "auth-test".into(),
+            stash(
+                "auth-test",
+                "auth login rate limit throttle tests",
+                &["fn check_auth_rate_limit() { throttle_login_attempts(); }"],
+                &["auth_test.rs"],
+            ),
+        );
+        p.stashes.insert(
+            "pizza".into(),
+            stash(
+                "pizza",
+                "pizza dessert food recipes toppings cheese",
+                &[],
+                &[],
+            ),
+        );
         let (sidecar, _) = reconcile(&p, &FingerprintSidecar::default());
 
         // Low threshold: auth-test should be suggested for auth-impl; pizza not.
         let sugg = suggest_links(&p, &sidecar, "auth-impl", 0.4, 5);
-        assert!(sugg.iter().any(|s| s.name == "auth-test"), "related stash suggested");
-        assert!(!sugg.iter().any(|s| s.name == "pizza"), "unrelated stash not suggested");
+        assert!(
+            sugg.iter().any(|s| s.name == "auth-test"),
+            "related stash suggested"
+        );
+        assert!(
+            !sugg.iter().any(|s| s.name == "pizza"),
+            "unrelated stash not suggested"
+        );
 
         // A very high threshold suppresses everything.
         let none = suggest_links(&p, &sidecar, "auth-impl", 0.99, 5);
@@ -1415,23 +1606,45 @@ mod tests {
         // Already-linked stashes are not re-suggested.
         struct C;
         impl crate::palace::ops::Clock for C {
-            fn now_iso(&self) -> String { "t".into() }
-            fn now_ms(&self) -> i64 { 1 }
+            fn now_iso(&self) -> String {
+                "t".into()
+            }
+            fn now_ms(&self) -> i64 {
+                1
+            }
         }
-        crate::palace::relations::add_relation(&mut p, &C, "auth-impl", "auth-test", "see-also", "").unwrap();
+        crate::palace::relations::add_relation(
+            &mut p,
+            &C,
+            "auth-impl",
+            "auth-test",
+            "see-also",
+            "",
+        )
+        .unwrap();
         let after = suggest_links(&p, &sidecar, "auth-impl", 0.4, 5);
-        assert!(!after.iter().any(|s| s.name == "auth-test"), "linked stash excluded");
+        assert!(
+            !after.iter().any(|s| s.name == "auth-test"),
+            "linked stash excluded"
+        );
     }
 
     #[test]
     fn older_sidecar_without_chunks_or_vector_is_upgraded() {
         // Simulate a sidecar written before chunking/vectors: scalar only.
         let mut p = Palace::empty();
-        p.stashes.insert("s".into(), stash("s", "hello world note", &["body line here"], &[]));
+        p.stashes.insert(
+            "s".into(),
+            stash("s", "hello world note", &["body line here"], &[]),
+        );
         let scalar_only = FingerprintSidecar {
             by_stash: [(
                 "s".to_string(),
-                StashSignature { scalar: fingerprint_stash(&p.stashes["s"]), chunks: None, vector: None },
+                StashSignature {
+                    scalar: fingerprint_stash(&p.stashes["s"]),
+                    chunks: None,
+                    vector: None,
+                },
             )]
             .into_iter()
             .collect(),
@@ -1458,11 +1671,20 @@ mod tests {
     fn cosine_related_above_unrelated() {
         let base = randproj_vector("auth rate limit login throttle attempts", DataType::Prose);
         let near = randproj_vector("auth login rate limit throttle requests", DataType::Prose);
-        let far = randproj_vector("pizza dessert food recipes toppings cheese", DataType::Prose);
+        let far = randproj_vector(
+            "pizza dessert food recipes toppings cheese",
+            DataType::Prose,
+        );
         let c_near = cosine(&base, &near);
         let c_far = cosine(&base, &far);
-        assert!(c_near > c_far, "related cosine {c_near} > unrelated {c_far}");
-        assert!(c_near > 0.3, "shared vocab should give real cosine, got {c_near}");
+        assert!(
+            c_near > c_far,
+            "related cosine {c_near} > unrelated {c_far}"
+        );
+        assert!(
+            c_near > 0.3,
+            "shared vocab should give real cosine, got {c_near}"
+        );
     }
 
     #[test]
@@ -1479,9 +1701,24 @@ mod tests {
     fn vector_axis_ranks_related_first() {
         let mut p = Palace::empty();
         for s in [
-            stash("auth", "auth rate limit login throttle attempts handler", &[], &[]),
-            stash("auth2", "login auth throttle rate limit requests guard", &[], &[]),
-            stash("pizza", "pizza dessert food recipes toppings cheese dough", &[], &[]),
+            stash(
+                "auth",
+                "auth rate limit login throttle attempts handler",
+                &[],
+                &[],
+            ),
+            stash(
+                "auth2",
+                "login auth throttle rate limit requests guard",
+                &[],
+                &[],
+            ),
+            stash(
+                "pizza",
+                "pizza dessert food recipes toppings cheese dough",
+                &[],
+                &[],
+            ),
         ] {
             p.stashes.insert(s.name.clone(), s);
         }
@@ -1489,7 +1726,10 @@ mod tests {
         let q = SimQuery::from_signature(&sidecar.by_stash["auth"]);
         let hits = rank_similar(&p, &sidecar, &q, MatchAxis::Vector, 5, Some("auth"), None);
         assert_eq!(hits.len(), 2);
-        assert_eq!(hits[0].name, "auth2", "lexically-related ranks first on vector axis");
+        assert_eq!(
+            hits[0].name, "auth2",
+            "lexically-related ranks first on vector axis"
+        );
         assert_eq!(hits[0].method, SimMethod::RandProj);
     }
 }

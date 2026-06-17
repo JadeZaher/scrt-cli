@@ -1,0 +1,120 @@
+name: Release
+
+# Cut a release by pushing a version tag:
+#   git tag v0.1.0 && git push origin v0.1.0
+# Plain pushes to main do NOT release (that's CI's job) — you tag when you
+# mean to ship. The tag name is the release version.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # needed to create the GitHub Release + upload assets
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Gate: the release only proceeds if test + clippy are green ──────────
+  gate:
+    name: test + clippy gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy (deny warnings)
+        run: cargo clippy -p scrt-core -p scrt-cli -p scrt-server -p scrt-evolve --all-targets
+        env:
+          RUSTFLAGS: "-D warnings"
+      - name: Test
+        run: cargo test -p scrt-core -p scrt-cli -p scrt-server -p scrt-evolve
+
+  # ── Build the `scrt` binary for every target ───────────────────────────
+  build:
+    name: build ${{ matrix.target }}
+    needs: gate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: false
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true # cross-compiled via `cross`
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            cross: false
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            cross: false
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            cross: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable, ${{ matrix.target }})
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      # Linux ARM64 needs a cross toolchain; `cross` runs the build in a
+      # container with the right linker. Other targets build natively.
+      - name: Install cross
+        if: matrix.cross
+        run: cargo install cross --locked
+
+      - name: Build (cross)
+        if: matrix.cross
+        run: cross build --release -p scrt-cli --target ${{ matrix.target }}
+
+      - name: Build (native)
+        if: ${{ !matrix.cross }}
+        run: cargo build --release -p scrt-cli --target ${{ matrix.target }}
+
+      # Package: a tarball on unix, a zip on windows, each containing the
+      # binary + README + LICENSE. Asset name embeds the target triple.
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          BIN=target/${{ matrix.target }}/release/scrt
+          STAGE="scrt-${{ github.ref_name }}-${{ matrix.target }}"
+          mkdir "$STAGE"
+          cp "$BIN" "$STAGE/"
+          cp README.md LICENSE "$STAGE/" 2>/dev/null || cp README.md "$STAGE/"
+          tar -czf "$STAGE.tar.gz" "$STAGE"
+          echo "ASSET=$STAGE.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $bin = "target/${{ matrix.target }}/release/scrt.exe"
+          $stage = "scrt-${{ github.ref_name }}-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item $bin $stage
+          Copy-Item README.md $stage
+          if (Test-Path LICENSE) { Copy-Item LICENSE $stage }
+          Compress-Archive -Path $stage -DestinationPath "$stage.zip"
+          "ASSET=$stage.zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload asset to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET }}
+          # Auto-generate release notes from commits; mark prereleases when
+          # the tag has a pre-release suffix (e.g. v0.1.0-rc.1).
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -40,8 +40,8 @@ pub mod format; // json output; agent-json (Prompt 3); llm/markdown/text (Prompt
 pub mod fuzzy; // trigram regex + Levenshtein post-filter (Prompt 3)
 pub mod nodes; // match -> token-budgeted context node
 pub mod orchestrator; // the search() pipeline (port of index.ts main path)
-pub mod palace; // mind palace: FilePalace + MemoryPalace + multi-tenant registry
 pub mod pagination; // page-through utility
+pub mod palace; // mind palace: FilePalace + MemoryPalace + multi-tenant registry
 pub mod search; // in-process grep-searcher driver (replaces rg subprocess)
 pub mod sources; // file/glob/dir/cmd/url/stdin resolution
 pub mod tokens; // chars/4 estimator

@@ -75,7 +75,11 @@ pub fn prune_older_than(
             palace.stashes.shift_remove(n);
         }
     }
-    Ok(PruneResult { removed: names.len(), names, dry_run })
+    Ok(PruneResult {
+        removed: names.len(),
+        names,
+        dry_run,
+    })
 }
 
 /// Remove stashes whose `expires_at` is in the past.
@@ -84,7 +88,12 @@ pub fn prune_expired(palace: &mut Palace, clock: &dyn Clock, dry_run: bool) -> P
     let names: Vec<String> = palace
         .stashes
         .iter()
-        .filter(|(_, s)| s.expires_at.as_ref().map(|e| iso_to_ms(e) < now).unwrap_or(false))
+        .filter(|(_, s)| {
+            s.expires_at
+                .as_ref()
+                .map(|e| iso_to_ms(e) < now)
+                .unwrap_or(false)
+        })
         .map(|(n, _)| n.clone())
         .collect();
     if !dry_run {
@@ -92,7 +101,11 @@ pub fn prune_expired(palace: &mut Palace, clock: &dyn Clock, dry_run: bool) -> P
             palace.stashes.shift_remove(n);
         }
     }
-    PruneResult { removed: names.len(), names, dry_run }
+    PruneResult {
+        removed: names.len(),
+        names,
+        dry_run,
+    }
 }
 
 /// Keep the N most recently updated stashes; remove the rest.
@@ -110,7 +123,11 @@ pub fn prune_keep(palace: &mut Palace, n: usize, dry_run: bool) -> PruneResult {
             palace.stashes.shift_remove(nm);
         }
     }
-    PruneResult { removed: names.len(), names, dry_run }
+    PruneResult {
+        removed: names.len(),
+        names,
+        dry_run,
+    }
 }
 
 /// Remove all stashes carrying `tag`.
@@ -126,11 +143,19 @@ pub fn prune_tag(palace: &mut Palace, tag: &str, dry_run: bool) -> PruneResult {
             palace.stashes.shift_remove(n);
         }
     }
-    PruneResult { removed: names.len(), names, dry_run }
+    PruneResult {
+        removed: names.len(),
+        names,
+        dry_run,
+    }
 }
 
 /// Remove all stashes. Requires explicit confirmation.
-pub fn prune_all(palace: &mut Palace, confirmed: bool, dry_run: bool) -> Result<PruneResult, String> {
+pub fn prune_all(
+    palace: &mut Palace,
+    confirmed: bool,
+    dry_run: bool,
+) -> Result<PruneResult, String> {
     let names: Vec<String> = palace.stashes.keys().cloned().collect();
     if !confirmed {
         return Err(format!(
@@ -142,5 +167,9 @@ pub fn prune_all(palace: &mut Palace, confirmed: bool, dry_run: bool) -> Result<
     if !dry_run {
         palace.stashes.clear();
     }
-    Ok(PruneResult { removed: names.len(), names, dry_run })
+    Ok(PruneResult {
+        removed: names.len(),
+        names,
+        dry_run,
+    })
 }

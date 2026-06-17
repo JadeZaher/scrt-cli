@@ -57,7 +57,8 @@ pub fn build_matcher(pattern: &str, opts: &SearchOptions) -> Result<RegexMatcher
         // and the pattern to span lines.
         b.multi_line(true).dot_matches_new_line(true);
     }
-    b.build(pattern).map_err(|e| SearchError::BadPattern(e.to_string()))
+    b.build(pattern)
+        .map_err(|e| SearchError::BadPattern(e.to_string()))
 }
 
 /// Build a `Searcher` configured to match rg's line model. Multiline
@@ -168,7 +169,11 @@ pub fn search_content<F: FnMut(Match)>(
     on_match: F,
 ) -> Result<(), SearchError> {
     let mut searcher = build_searcher(opts);
-    let mut sink = MatchSink { matcher, source, emit: on_match };
+    let mut sink = MatchSink {
+        matcher,
+        source,
+        emit: on_match,
+    };
     searcher
         .search_slice(matcher, content.as_bytes(), &mut sink)
         .map_err(|e| SearchError::Io(e.to_string()))
@@ -183,9 +188,17 @@ pub fn search_file<F: FnMut(Match)>(
     path: &str,
     on_match: F,
 ) -> Result<(), SearchError> {
-    let source = Source { id: path.to_string(), source_type: SourceType::File, label: None };
+    let source = Source {
+        id: path.to_string(),
+        source_type: SourceType::File,
+        label: None,
+    };
     let mut searcher = build_searcher(opts);
-    let mut sink = MatchSink { matcher, source, emit: on_match };
+    let mut sink = MatchSink {
+        matcher,
+        source,
+        emit: on_match,
+    };
     searcher
         .search_path(matcher, path, &mut sink)
         .map_err(|e| SearchError::Io(e.to_string()))
@@ -224,7 +237,10 @@ mod tests {
 
     #[test]
     fn case_insensitive_flag() {
-        let opts = SearchOptions { case_insensitive: true, ..Default::default() };
+        let opts = SearchOptions {
+            case_insensitive: true,
+            ..Default::default()
+        };
         let ms = collect("todo", "Found a TODO here", &opts);
         assert_eq!(ms.len(), 1);
         assert_eq!(ms[0].match_start, 8);
@@ -232,7 +248,10 @@ mod tests {
 
     #[test]
     fn fixed_strings_treats_pattern_literally() {
-        let opts = SearchOptions { fixed_strings: true, ..Default::default() };
+        let opts = SearchOptions {
+            fixed_strings: true,
+            ..Default::default()
+        };
         // "a.b" as a literal should NOT match "axb".
         let ms = collect("a.b", "axb and a.b", &opts);
         assert_eq!(ms.len(), 1);
@@ -241,7 +260,10 @@ mod tests {
 
     #[test]
     fn word_match_flag() {
-        let opts = SearchOptions { word_match: true, ..Default::default() };
+        let opts = SearchOptions {
+            word_match: true,
+            ..Default::default()
+        };
         let ms = collect("cat", "category cat scatter", &opts);
         assert_eq!(ms.len(), 1);
         assert_eq!(ms[0].match_start, 9);

@@ -25,12 +25,16 @@ pub fn handle(rest: &[String]) -> Result<i32, AppError> {
         "" => Err(AppError::BadArgs(
             "evolve: subcommand required (init | corpus | train)".into(),
         )),
-        other => Err(AppError::BadArgs(format!("evolve: unknown subcommand {other}"))),
+        other => Err(AppError::BadArgs(format!(
+            "evolve: unknown subcommand {other}"
+        ))),
     }
 }
 
 fn flag_value<'a>(args: &'a [String], name: &str) -> Option<&'a String> {
-    args.iter().position(|a| a == name).and_then(|i| args.get(i + 1))
+    args.iter()
+        .position(|a| a == name)
+        .and_then(|i| args.get(i + 1))
 }
 
 /// `scrt evolve init --model <path>` — scaffold the config.
@@ -50,7 +54,9 @@ fn init(args: &[String]) -> Result<i32, AppError> {
     if !Path::new(model).exists() {
         eprintln!("scrt: note — {model} does not exist yet; point it at a real model before `scrt evolve train`.");
     }
-    eprintln!("scrt: next — `scrt evolve corpus` to export the training set, then `scrt evolve train`.");
+    eprintln!(
+        "scrt: next — `scrt evolve corpus` to export the training set, then `scrt evolve train`."
+    );
     Ok(0)
 }
 
@@ -59,14 +65,17 @@ fn corpus(args: &[String]) -> Result<i32, AppError> {
     let palace_path = flag_value(args, "--mp-path")
         .map(PathBuf::from)
         .unwrap_or_else(scrt_core::palace::default_palace_path);
-    let palace = scrt_core::palace::FilePalace::load(&palace_path, &scrt_core::palace::ops::SystemClock);
+    let palace =
+        scrt_core::palace::FilePalace::load(&palace_path, &scrt_core::palace::ops::SystemClock);
 
     let negatives = flag_value(args, "--negatives")
         .and_then(|s| s.parse().ok())
         .unwrap_or(4);
     let rows = build_corpus(
         scrt_core::palace::Palace::data(&palace),
-        CorpusOptions { negatives_per_row: negatives },
+        CorpusOptions {
+            negatives_per_row: negatives,
+        },
     );
     let jsonl = to_jsonl(&rows);
 
@@ -77,7 +86,11 @@ fn corpus(args: &[String]) -> Result<i32, AppError> {
         }
         None => {
             print!("{jsonl}");
-            eprintln!("scrt: {} corpus rows from {}", rows.len(), palace_path.display());
+            eprintln!(
+                "scrt: {} corpus rows from {}",
+                rows.len(),
+                palace_path.display()
+            );
         }
     }
     Ok(0)
@@ -112,13 +125,18 @@ fn train_inner(args: &[String]) -> Result<i32, AppError> {
     let palace_path = flag_value(args, "--mp-path")
         .map(PathBuf::from)
         .unwrap_or_else(scrt_core::palace::default_palace_path);
-    let palace = scrt_core::palace::FilePalace::load(&palace_path, &scrt_core::palace::ops::SystemClock);
+    let palace =
+        scrt_core::palace::FilePalace::load(&palace_path, &scrt_core::palace::ops::SystemClock);
     let rows = build_corpus(
         scrt_core::palace::Palace::data(&palace),
-        CorpusOptions { negatives_per_row: cfg.evolve.negatives_per_row },
+        CorpusOptions {
+            negatives_per_row: cfg.evolve.negatives_per_row,
+        },
     );
 
-    let palace_id = flag_value(args, "--id").cloned().unwrap_or_else(|| "default".into());
+    let palace_id = flag_value(args, "--id")
+        .cloned()
+        .unwrap_or_else(|| "default".into());
     let adapter_out = cfg
         .evolve
         .adapter_out

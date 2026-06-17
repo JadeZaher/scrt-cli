@@ -1,5 +1,8 @@
 # scrt
 
+[![CI](https://github.com/JadeZaher/scrt-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/JadeZaher/scrt-cli/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 **scrt** — *Speedy Context Retrieval Tool* — is a long-running
 **processing engine for grounded generative context**: token-budgeted
 **context-node** retrieval, an instantiable **mind palace** of saved
@@ -123,6 +126,7 @@ mpg-inherited tools keep their names so migrating agents keep working;
 | Doc | What it covers |
 | :--- | :--- |
 | [INSTALL.md](./INSTALL.md) | Install + agent integration (Claude/Gemini plugins, Pi extension, Node/Python, `--serve`). |
+| [RELEASING.md](./RELEASING.md) | How releases are cut (tag → CI gate → cross-platform binaries). |
 | [DESIGN.md](./DESIGN.md) | Thesis, feature surface, non-goals, dependency choices. |
 | [COMPAT.md](./COMPAT.md) | The mpg JSON schemas scrt round-trips — the migration boundary. |
 | [MIGRATION.md](./MIGRATION.md) | Coming from Node `mpg`: what's identical, what differs, perf. |

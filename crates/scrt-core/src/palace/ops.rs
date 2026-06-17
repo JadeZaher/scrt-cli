@@ -131,7 +131,11 @@ pub fn stash_nodes(nodes: &[Node]) -> Vec<StashedNode> {
             let is_file = n.source.source_type == SourceType::File;
             let mut base = StashedNode {
                 source: n.source.id.clone(),
-                file_path: if is_file { Some(n.source.id.clone()) } else { None },
+                file_path: if is_file {
+                    Some(n.source.id.clone())
+                } else {
+                    None
+                },
                 source_type: source_type_str(n.source.source_type).to_string(),
                 match_line: n.match_line,
                 start_line: n.start_line,
@@ -161,7 +165,11 @@ pub fn stash_nodes_locations(nodes: &[Node]) -> Vec<StashedNode> {
             let is_file = n.source.source_type == SourceType::File;
             let mut base = StashedNode {
                 source: n.source.id.clone(),
-                file_path: if is_file { Some(n.source.id.clone()) } else { None },
+                file_path: if is_file {
+                    Some(n.source.id.clone())
+                } else {
+                    None
+                },
                 source_type: source_type_str(n.source.source_type).to_string(),
                 match_line: n.match_line,
                 start_line: n.match_line,
@@ -261,7 +269,11 @@ pub fn parse_duration(s: &str) -> Result<i64, String> {
     let n: f64 = num_part
         .parse()
         .map_err(|_| format!("Invalid duration: {s}. Use e.g. 30s, 10m, 2h, 7d."))?;
-    let unit = if unit_part.is_empty() { "ms".to_string() } else { unit_part.to_lowercase() };
+    let unit = if unit_part.is_empty() {
+        "ms".to_string()
+    } else {
+        unit_part.to_lowercase()
+    };
     let ms = match unit.as_str() {
         "s" | "sec" => n * 1000.0,
         "m" | "min" => n * 60.0 * 1000.0,
@@ -437,13 +449,13 @@ pub fn compose_to_sources(palace: &Palace, names: &[String]) -> Result<Vec<Strin
 
 /// Set difference: files in `a` not in any of `b` (port of `exceptToSources`).
 pub fn except_to_sources(palace: &Palace, a: &str, b: &[String]) -> Result<Vec<String>, String> {
-    let base = palace
-        .stashes
-        .get(a)
-        .ok_or_else(|| unknown_stash(a))?;
+    let base = palace.stashes.get(a).ok_or_else(|| unknown_stash(a))?;
     let mut exclude = std::collections::HashSet::new();
     for name in b {
-        let stash = palace.stashes.get(name).ok_or_else(|| unknown_stash(name))?;
+        let stash = palace
+            .stashes
+            .get(name)
+            .ok_or_else(|| unknown_stash(name))?;
         for id in stash_to_source_ids(stash) {
             exclude.insert(id);
         }
@@ -466,7 +478,10 @@ pub fn intersect_to_sources(palace: &Palace, names: &[String]) -> Result<Vec<Str
     }
     let mut sets: Vec<std::collections::HashSet<String>> = Vec::new();
     for name in names {
-        let stash = palace.stashes.get(name).ok_or_else(|| unknown_stash(name))?;
+        let stash = palace
+            .stashes
+            .get(name)
+            .ok_or_else(|| unknown_stash(name))?;
         sets.push(stash_to_source_ids(stash).into_iter().collect());
     }
     let (first, rest) = sets.split_first().unwrap();
@@ -550,7 +565,11 @@ mod tests {
     }
 
     fn search_meta() -> StashSearch {
-        StashSearch { pattern: "p".into(), effort: "normal".into(), sources_count: 1 }
+        StashSearch {
+            pattern: "p".into(),
+            effort: "normal".into(),
+            sources_count: 1,
+        }
     }
 
     #[test]
@@ -558,13 +577,35 @@ mod tests {
         let clock = FixedClock(1000);
         let mut p = Palace::empty();
         let nodes = vec![node("a.txt", 1), node("a.txt", 2)];
-        let act = add_stash(&mut p, &clock, "s", "note", &nodes, search_meta(), &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+        let act = add_stash(
+            &mut p,
+            &clock,
+            "s",
+            "note",
+            &nodes,
+            search_meta(),
+            &["a.txt".into()],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
         assert_eq!(act, StashAction::Created);
         assert_eq!(p.stashes["s"].nodes.len(), 2);
 
         // Merge with an overlapping + a new node -> dedup keeps 3 total.
         let more = vec![node("a.txt", 2), node("a.txt", 3)];
-        let act = add_stash(&mut p, &clock, "s", "note", &more, search_meta(), &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+        let act = add_stash(
+            &mut p,
+            &clock,
+            "s",
+            "note",
+            &more,
+            search_meta(),
+            &["a.txt".into()],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
         assert_eq!(act, StashAction::Merged);
         assert_eq!(p.stashes["s"].nodes.len(), 3);
     }
@@ -573,9 +614,34 @@ mod tests {
     fn replace_overwrites_nodes() {
         let clock = FixedClock(1000);
         let mut p = Palace::empty();
-        add_stash(&mut p, &clock, "s", "n", &[node("a.txt", 1), node("a.txt", 2)], search_meta(), &[], &[], &StashOptions::default()).unwrap();
-        let opts = StashOptions { replace: true, ..Default::default() };
-        let act = add_stash(&mut p, &clock, "s", "n2", &[node("a.txt", 9)], search_meta(), &[], &[], &opts).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "s",
+            "n",
+            &[node("a.txt", 1), node("a.txt", 2)],
+            search_meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
+        let opts = StashOptions {
+            replace: true,
+            ..Default::default()
+        };
+        let act = add_stash(
+            &mut p,
+            &clock,
+            "s",
+            "n2",
+            &[node("a.txt", 9)],
+            search_meta(),
+            &[],
+            &[],
+            &opts,
+        )
+        .unwrap();
         assert_eq!(act, StashAction::Replaced);
         assert_eq!(p.stashes["s"].nodes.len(), 1);
         assert_eq!(p.stashes["s"].note, "n2");
@@ -585,8 +651,30 @@ mod tests {
     fn compose_intersect_except() {
         let clock = FixedClock(1);
         let mut p = Palace::empty();
-        add_stash(&mut p, &clock, "a", "", &[node("x.txt", 1), node("y.txt", 1)], search_meta(), &[], &[], &StashOptions::default()).unwrap();
-        add_stash(&mut p, &clock, "b", "", &[node("y.txt", 1), node("z.txt", 1)], search_meta(), &[], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "a",
+            "",
+            &[node("x.txt", 1), node("y.txt", 1)],
+            search_meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "b",
+            "",
+            &[node("y.txt", 1), node("z.txt", 1)],
+            search_meta(),
+            &[],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
 
         let comp = compose_to_sources(&p, &["a".into(), "b".into()]).unwrap();
         assert_eq!(comp, vec!["x.txt", "y.txt", "z.txt"]); // union, first-seen order
@@ -605,7 +693,18 @@ mod tests {
         let clock = FixedClock(1);
         let mut p = Palace::empty();
         for n in ["a", "b", "c"] {
-            add_stash(&mut p, &clock, n, "", &[node("x.txt", 1)], search_meta(), &[], &[], &StashOptions::default()).unwrap();
+            add_stash(
+                &mut p,
+                &clock,
+                n,
+                "",
+                &[node("x.txt", 1)],
+                search_meta(),
+                &[],
+                &[],
+                &StashOptions::default(),
+            )
+            .unwrap();
         }
         assert!(drop_stash(&mut p, "b"));
         let keys: Vec<&str> = p.stashes.keys().map(String::as_str).collect();

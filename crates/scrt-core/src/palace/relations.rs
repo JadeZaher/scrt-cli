@@ -67,7 +67,12 @@ pub fn add_relation(
 }
 
 /// Remove all relationships `from -> to` (port of `removeRelation`).
-pub fn remove_relation(palace: &mut Palace, clock: &dyn Clock, from: &str, to: &str) -> Result<bool, String> {
+pub fn remove_relation(
+    palace: &mut Palace,
+    clock: &dyn Clock,
+    from: &str,
+    to: &str,
+) -> Result<bool, String> {
     let source = palace
         .stashes
         .get_mut(from)

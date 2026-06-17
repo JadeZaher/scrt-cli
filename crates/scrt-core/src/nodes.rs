@@ -162,7 +162,10 @@ struct Trim {
 /// Returns kept lines in original order.
 fn trim_anchored_at_start(lines: &[&str], budget: usize) -> Trim {
     if budget == 0 || lines.is_empty() {
-        return Trim { kept: Vec::new(), spent: 0 };
+        return Trim {
+            kept: Vec::new(),
+            spent: 0,
+        };
     }
     let n = lines.len();
     let mut kept: Vec<Option<&str>> = vec![None; n];
@@ -211,7 +214,10 @@ fn trim_anchored_at_start(lines: &[&str], budget: usize) -> Trim {
     }
 
     let result: Vec<String> = kept.into_iter().flatten().map(str::to_owned).collect();
-    Trim { kept: result, spent }
+    Trim {
+        kept: result,
+        spent,
+    }
 }
 
 // ── Window-decay curve ──────────────────────────────────────────────────
@@ -254,9 +260,7 @@ fn curve_ratio(rank: usize, total: usize, mode: WindowCurve) -> f64 {
 /// Port of `trimNodeContext`: drop outer lines until each side is under
 /// its target, then recompute tokens.
 fn trim_node_context(node: &mut Node, target_before: usize, target_after: usize) {
-    while !node.context_before.is_empty()
-        && estimate_many(&node.context_before) > target_before
-    {
+    while !node.context_before.is_empty() && estimate_many(&node.context_before) > target_before {
         node.context_before.remove(0);
         node.start_line = node.start_line.saturating_add(1).min(node.match_line);
     }
@@ -273,10 +277,7 @@ fn trim_node_context(node: &mut Node, target_before: usize, target_after: usize)
 
 /// Port of `applyTotalBudget`. Greedy keep-until-exhausted; both `fill`
 /// and `deep` use the same trim in v1 (v0.x `void strategy`).
-pub fn apply_total_budget(
-    nodes: Vec<Node>,
-    max_tokens: Option<usize>,
-) -> (Vec<Node>, bool) {
+pub fn apply_total_budget(nodes: Vec<Node>, max_tokens: Option<usize>) -> (Vec<Node>, bool) {
     let max_tokens = match max_tokens {
         Some(m) if m > 0 => m,
         _ => return (nodes, false),
@@ -318,11 +319,15 @@ mod tests {
     fn clip_mode_basic() {
         // line "abcdefghij", match "ef" at bytes 4..6, clip 2 chars each side.
         let mat = m("abcdefghij", 1, 4, 6);
-        let n = build_node(&mat, "abcdefghij", &BuildNodeOptions {
-            before_tokens: 500,
-            after_tokens: 500,
-            clip_chars: Some(2),
-        });
+        let n = build_node(
+            &mat,
+            "abcdefghij",
+            &BuildNodeOptions {
+                before_tokens: 500,
+                after_tokens: 500,
+                clip_chars: Some(2),
+            },
+        );
         // start_char = 4-2 = 2 ('c'), end_char = 6+2 = 8 ('h'), both interior
         // => head "…" + "cdefgh" + "…" tail.
         assert_eq!(n.match_text, "…cdefgh…");
@@ -338,11 +343,15 @@ mod tests {
     fn clip_mode_no_ellipsis_at_edges() {
         // match at very start, clip wide enough to reach both ends.
         let mat = m("abc", 1, 0, 1);
-        let n = build_node(&mat, "abc", &BuildNodeOptions {
-            before_tokens: 0,
-            after_tokens: 0,
-            clip_chars: Some(10),
-        });
+        let n = build_node(
+            &mat,
+            "abc",
+            &BuildNodeOptions {
+                before_tokens: 0,
+                after_tokens: 0,
+                clip_chars: Some(10),
+            },
+        );
         assert_eq!(n.match_text, "abc"); // no ellipsis either side
         assert_eq!(n.match_spans, vec![[0, 1]]);
     }
@@ -351,11 +360,15 @@ mod tests {
     fn line_context_window() {
         let content = "l1\nl2\nl3\nMATCH\nl5\nl6";
         let mat = m("MATCH", 4, 0, 5);
-        let n = build_node(&mat, content, &BuildNodeOptions {
-            before_tokens: 500,
-            after_tokens: 500,
-            clip_chars: None,
-        });
+        let n = build_node(
+            &mat,
+            content,
+            &BuildNodeOptions {
+                before_tokens: 500,
+                after_tokens: 500,
+                clip_chars: None,
+            },
+        );
         assert_eq!(n.match_line, 4);
         assert_eq!(n.match_text, "MATCH");
         // Generous budget keeps all surrounding lines.

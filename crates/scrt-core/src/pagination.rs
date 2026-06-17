@@ -36,7 +36,11 @@ fn resolve(opts: PaginationOptions) -> Resolved {
     let enabled = !opts.all && matches!(opts.page, Some(p) if p > 0);
     let page = if enabled { opts.page.unwrap_or(1) } else { 1 };
     let page_size = opts.page_size.unwrap_or(10);
-    Resolved { enabled, page, page_size }
+    Resolved {
+        enabled,
+        page,
+        page_size,
+    }
 }
 
 /// Apply pagination to a vector, returning the slice and metadata.
@@ -51,7 +55,11 @@ pub fn paginate<T>(items: Vec<T>, opts: PaginationOptions) -> (Vec<T>, Option<Pa
     let clamped = r.page.clamp(1, total_pages);
     let start = (clamped - 1) * r.page_size;
     let end = std::cmp::min(start + r.page_size, total_items);
-    let slice: Vec<T> = items.into_iter().skip(start).take(end.saturating_sub(start)).collect();
+    let slice: Vec<T> = items
+        .into_iter()
+        .skip(start)
+        .take(end.saturating_sub(start))
+        .collect();
     let meta = PaginationMeta {
         page: clamped,
         page_size: r.page_size,
@@ -76,7 +84,11 @@ mod tests {
 
     #[test]
     fn first_page_of_two() {
-        let opts = PaginationOptions { page: Some(1), page_size: Some(2), all: false };
+        let opts = PaginationOptions {
+            page: Some(1),
+            page_size: Some(2),
+            all: false,
+        };
         let (items, meta) = paginate(vec![1, 2, 3], opts);
         assert_eq!(items, vec![1, 2]);
         let m = meta.unwrap();
@@ -87,7 +99,11 @@ mod tests {
 
     #[test]
     fn clamps_overshoot_page() {
-        let opts = PaginationOptions { page: Some(99), page_size: Some(2), all: false };
+        let opts = PaginationOptions {
+            page: Some(99),
+            page_size: Some(2),
+            all: false,
+        };
         let (items, meta) = paginate(vec![1, 2, 3], opts);
         assert_eq!(items, vec![3]); // last page
         let m = meta.unwrap();
@@ -98,7 +114,11 @@ mod tests {
 
     #[test]
     fn all_flag_disables() {
-        let opts = PaginationOptions { page: Some(1), page_size: Some(1), all: true };
+        let opts = PaginationOptions {
+            page: Some(1),
+            page_size: Some(1),
+            all: true,
+        };
         let (items, meta) = paginate(vec![1, 2, 3], opts);
         assert_eq!(items, vec![1, 2, 3]);
         assert!(meta.is_none());

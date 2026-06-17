@@ -7,16 +7,20 @@
 use scrt_core::palace::ops::{
     add_stash, drop_stash, get_stash, list_stashes, StashOptions, StashSearch, SystemClock,
 };
-use scrt_core::palace::prune::{prune_all, prune_expired, prune_keep, prune_older_than, prune_tag, PruneResult};
-use scrt_core::palace::relations::{add_relation, get_related, remove_relation, traversal_graph, Direction};
+use scrt_core::palace::prune::{
+    prune_all, prune_expired, prune_keep, prune_older_than, prune_tag, PruneResult,
+};
+use scrt_core::palace::relations::{
+    add_relation, get_related, remove_relation, traversal_graph, Direction,
+};
 use scrt_core::palace::simhash::{
     load_sidecar, rank_similar, reconcile, save_sidecar, signature_stash, suggest_links, MatchAxis,
     SimMethod, SimQuery, SimilarHit,
 };
 use scrt_core::palace::types::Stash;
 use scrt_core::palace::{
-    compose_to_sources_path, default_palace_path, except_to_sources_path, intersect_to_sources_path,
-    FilePalace, Palace,
+    compose_to_sources_path, default_palace_path, except_to_sources_path,
+    intersect_to_sources_path, FilePalace, Palace,
 };
 use scrt_core::types::SearchResult;
 use scrt_core::SourceInput;
@@ -70,8 +74,12 @@ pub fn handle_palace_only(raw: &RawArgs) -> Result<Option<i32>, AppError> {
     }
     if raw.mp_prune_all {
         let mut palace = FilePalace::load(&path, &clock);
-        let r = prune_all(palace.data_mut(), raw.mp_prune_confirm, raw.mp_prune_dry_run)
-            .map_err(AppError::Palace)?;
+        let r = prune_all(
+            palace.data_mut(),
+            raw.mp_prune_confirm,
+            raw.mp_prune_dry_run,
+        )
+        .map_err(AppError::Palace)?;
         if !r.dry_run {
             save(&mut palace)?;
         }
@@ -106,7 +114,10 @@ pub fn handle_palace_only(raw: &RawArgs) -> Result<Option<i32>, AppError> {
                 return Err(AppError::Palace(format!("no such stash: {name}")));
             }
             Some(s) => {
-                print!("{}", format_get(s, &path.to_string_lossy(), raw.mp_get_with_nodes));
+                print!(
+                    "{}",
+                    format_get(s, &path.to_string_lossy(), raw.mp_get_with_nodes)
+                );
                 println!();
                 return Ok(Some(0));
             }
@@ -123,8 +134,15 @@ pub fn handle_palace_only(raw: &RawArgs) -> Result<Option<i32>, AppError> {
     }
     if let Some((from, to, ty, note)) = &raw.mp_link {
         let mut palace = FilePalace::load(&path, &clock);
-        let rel = add_relation(palace.data_mut(), &clock, from, to, ty, note.as_deref().unwrap_or(""))
-            .map_err(AppError::Palace)?;
+        let rel = add_relation(
+            palace.data_mut(),
+            &clock,
+            from,
+            to,
+            ty,
+            note.as_deref().unwrap_or(""),
+        )
+        .map_err(AppError::Palace)?;
         save(&mut palace)?;
         print!(
             "<scrt relation action=linked from=\"{from}\" to=\"{to}\" type=\"{}\">\n  {from} --({})--> {to}\n  {}created: {}\n</scrt relation>\n",
@@ -200,7 +218,11 @@ fn handle_similar(raw: &RawArgs, path: &std::path::Path) -> Result<i32, AppError
                 .get(name)
                 .cloned()
                 .unwrap_or_else(|| signature_stash(stash));
-            (SimQuery::from_signature(&sig), Some(name.as_str()), format!("stash \"{name}\""))
+            (
+                SimQuery::from_signature(&sig),
+                Some(name.as_str()),
+                format!("stash \"{name}\""),
+            )
         } else {
             let term = raw.mp_similar_term.as_ref().unwrap();
             (SimQuery::from_term(term), None, format!("term \"{term}\""))
@@ -230,12 +252,13 @@ pub fn prepend_palace_sources(
     inputs: &mut Vec<SourceInput>,
 ) -> Result<(), AppError> {
     let path = palace_path(raw);
-    let ids: Vec<String> = if let (Some(from), Some(exc)) = (raw.mp_from.as_ref(), raw.mp_except.as_ref()) {
+    let ids: Vec<String> = if let (Some(from), Some(exc)) =
+        (raw.mp_from.as_ref(), raw.mp_except.as_ref())
+    {
         // from minus except (base + extras).
         let mut excl = vec![exc.clone()];
         excl.extend(raw.mp_except_names.clone());
-        except_to_sources_path(&path, from, &excl)
-            .map_err(AppError::Palace)?
+        except_to_sources_path(&path, from, &excl).map_err(AppError::Palace)?
     } else if !raw.mp_compose.is_empty() && raw.mp_except.is_some() {
         let composed = compose_to_sources_path(&path, &raw.mp_compose).map_err(AppError::Palace)?;
         let mut names = vec![raw.mp_except.clone().unwrap()];
@@ -243,11 +266,16 @@ pub fn prepend_palace_sources(
         // Build exclude id set from those stashes.
         let mut exclude: std::collections::HashSet<String> = std::collections::HashSet::new();
         for nm in &names {
-            for id in compose_to_sources_path(&path, std::slice::from_ref(nm)).map_err(AppError::Palace)? {
+            for id in compose_to_sources_path(&path, std::slice::from_ref(nm))
+                .map_err(AppError::Palace)?
+            {
                 exclude.insert(id);
             }
         }
-        composed.into_iter().filter(|id| !exclude.contains(id)).collect()
+        composed
+            .into_iter()
+            .filter(|id| !exclude.contains(id))
+            .collect()
     } else if let Some(from) = &raw.mp_from {
         compose_to_sources_path(&path, std::slice::from_ref(from)).map_err(AppError::Palace)?
     } else if !raw.mp_compose.is_empty() {
@@ -317,7 +345,9 @@ pub fn maybe_stash(raw: &RawArgs, result: &SearchResult) -> Result<(), AppError>
     // against (best-effort: the sidecar is a recomputable cache, never fatal).
     let mut sidecar = load_sidecar(&path);
     if let Some(stash) = get_stash(palace.data(), name) {
-        sidecar.by_stash.insert(name.clone(), signature_stash(stash));
+        sidecar
+            .by_stash
+            .insert(name.clone(), signature_stash(stash));
     }
     let (sidecar, _) = scrt_core::palace::simhash::reconcile(palace.data(), &sidecar);
     let _ = save_sidecar(&path, &sidecar);
@@ -368,7 +398,10 @@ fn save(palace: &mut FilePalace) -> Result<(), AppError> {
 // ── Formatters ───────────────────────────────────────────────────────────
 
 fn format_list(stashes: &[&Stash], path: &str) -> String {
-    let mut out = vec![format!("<scrt mind-palace path=\"{path}\" count=\"{}\">", stashes.len())];
+    let mut out = vec![format!(
+        "<scrt mind-palace path=\"{path}\" count=\"{}\">",
+        stashes.len()
+    )];
     if stashes.is_empty() {
         out.push(String::new());
         out.push("(empty — no stashes. Use --mp-stash <name> <note> to create one.)".to_string());
@@ -381,15 +414,37 @@ fn format_list(stashes: &[&Stash], path: &str) -> String {
     for s in sorted {
         out.push(String::new());
         out.push(format!("--- STASH {} ---", s.name));
-        out.push(format!("note:    {}", if s.note.is_empty() { "(no note)" } else { &s.note }));
+        out.push(format!(
+            "note:    {}",
+            if s.note.is_empty() {
+                "(no note)"
+            } else {
+                &s.note
+            }
+        ));
         if !s.tags.is_empty() {
-            out.push(format!("tags:    {}", s.tags.iter().map(|t| format!("#{t}")).collect::<Vec<_>>().join(" ")));
+            out.push(format!(
+                "tags:    {}",
+                s.tags
+                    .iter()
+                    .map(|t| format!("#{t}"))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            ));
         }
         out.push(format!("pattern: {}", s.search.pattern));
         out.push(format!("effort:  {}", s.search.effort));
-        out.push(format!("nodes:   {}  |  sources: {}", s.nodes.len(), s.sources.len()));
+        out.push(format!(
+            "nodes:   {}  |  sources: {}",
+            s.nodes.len(),
+            s.sources.len()
+        ));
         if !s.relations.is_empty() {
-            out.push(format!("links:   {} relationship{}", s.relations.len(), if s.relations.len() == 1 { "" } else { "s" }));
+            out.push(format!(
+                "links:   {} relationship{}",
+                s.relations.len(),
+                if s.relations.len() == 1 { "" } else { "s" }
+            ));
         }
         out.push(format!("updated: {}", s.updated_at));
     }
@@ -406,7 +461,14 @@ fn format_get(stash: &Stash, path: &str, with_nodes: bool) -> String {
     )];
     out.push(String::new());
     out.push(format!("STASH: {}", stash.name));
-    out.push(format!("note:     {}", if stash.note.is_empty() { "(no note)" } else { &stash.note }));
+    out.push(format!(
+        "note:     {}",
+        if stash.note.is_empty() {
+            "(no note)"
+        } else {
+            &stash.note
+        }
+    ));
     if !stash.tags.is_empty() {
         out.push(format!("tags:     {}", stash.tags.join(", ")));
     }
@@ -415,22 +477,51 @@ fn format_get(stash: &Stash, path: &str, with_nodes: bool) -> String {
     if let Some(exp) = &stash.expires_at {
         out.push(format!("expires:  {exp}"));
     }
-    out.push(format!("search:   pattern={}  effort={}", stash.search.pattern, stash.search.effort));
-    out.push(format!("nodes:    {}  |  sources: {}", stash.nodes.len(), stash.sources.len()));
+    out.push(format!(
+        "search:   pattern={}  effort={}",
+        stash.search.pattern, stash.search.effort
+    ));
+    out.push(format!(
+        "nodes:    {}  |  sources: {}",
+        stash.nodes.len(),
+        stash.sources.len()
+    ));
     out.push(String::new());
 
     if with_nodes {
         out.push("--- NODES ---".to_string());
         for (i, n) in stash.nodes.iter().enumerate() {
             out.push(String::new());
-            out.push(format!("[{}/{}] {}:{}  (~{}t)", i + 1, stash.nodes.len(), n.source, n.match_line, n.tokens));
+            out.push(format!(
+                "[{}/{}] {}:{}  (~{}t)",
+                i + 1,
+                stash.nodes.len(),
+                n.source,
+                n.match_line,
+                n.tokens
+            ));
             let width = n.end_line.to_string().len();
             for (j, line) in n.context_before.iter().enumerate() {
-                out.push(format!("  {:>width$}    {}", n.start_line + j as u64, line, width = width));
+                out.push(format!(
+                    "  {:>width$}    {}",
+                    n.start_line + j as u64,
+                    line,
+                    width = width
+                ));
             }
-            out.push(format!("  {:>width$} >> {}", n.match_line, n.match_text, width = width));
+            out.push(format!(
+                "  {:>width$} >> {}",
+                n.match_line,
+                n.match_text,
+                width = width
+            ));
             for (j, line) in n.context_after.iter().enumerate() {
-                out.push(format!("  {:>width$}    {}", n.match_line + 1 + j as u64, line, width = width));
+                out.push(format!(
+                    "  {:>width$}    {}",
+                    n.match_line + 1 + j as u64,
+                    line,
+                    width = width
+                ));
             }
         }
     }
@@ -450,14 +541,21 @@ fn format_get(stash: &Stash, path: &str, with_nodes: bool) -> String {
                 "  --> {}  [{}]{}  ({})",
                 r.target,
                 r.rel_type,
-                if r.note.is_empty() { String::new() } else { format!(" \"{}\"", r.note) },
+                if r.note.is_empty() {
+                    String::new()
+                } else {
+                    format!(" \"{}\"", r.note)
+                },
                 r.created_at
             ));
         }
     }
     if !with_nodes {
         out.push(String::new());
-        out.push("(card view — pass --with-nodes or --full to dump the captured node context)".to_string());
+        out.push(
+            "(card view — pass --with-nodes or --full to dump the captured node context)"
+                .to_string(),
+        );
     }
     out.push(String::new());
     out.push("</scrt mind-palace-get>".to_string());
@@ -515,25 +613,34 @@ fn format_similar(
 }
 
 fn format_prune(r: &PruneResult) -> String {
-    let tag = if r.dry_run { " (DRY RUN — nothing was deleted)" } else { "" };
+    let tag = if r.dry_run {
+        " (DRY RUN — nothing was deleted)"
+    } else {
+        ""
+    };
     if r.removed == 0 {
         return format!("<scrt prune result removed=0>No stashes matched the prune criteria.{tag}</scrt prune>\n");
     }
-    let names = r.names.iter().map(|n| format!("  - {n}")).collect::<Vec<_>>().join("\n");
+    let names = r
+        .names
+        .iter()
+        .map(|n| format!("  - {n}"))
+        .collect::<Vec<_>>()
+        .join("\n");
     format!(
         "<scrt prune result removed={} dry_run={}>\nRemoved stashes ({}):\n{names}\n{tag}\n</scrt prune>\n",
         r.removed, r.dry_run, r.removed
     )
 }
 
-fn format_related(
-    related: &[scrt_core::palace::relations::Related],
-    center: &str,
-) -> String {
+fn format_related(related: &[scrt_core::palace::relations::Related], center: &str) -> String {
     if related.is_empty() {
         return format!("<scrt related name=\"{center}\">No relationships found.</scrt related>\n");
     }
-    let mut out = vec![format!("<scrt related name=\"{center}\" count=\"{}\">", related.len())];
+    let mut out = vec![format!(
+        "<scrt related name=\"{center}\" count=\"{}\">",
+        related.len()
+    )];
     for r in related {
         let dir = match r.direction {
             Direction::Outbound => format!("--> {}", r.stash_name),
@@ -542,7 +649,11 @@ fn format_related(
         out.push(format!(
             "  {dir}  [{}]{}",
             r.relation.rel_type,
-            if r.relation.note.is_empty() { String::new() } else { format!(" \"{}\"", r.relation.note) }
+            if r.relation.note.is_empty() {
+                String::new()
+            } else {
+                format!(" \"{}\"", r.relation.note)
+            }
         ));
     }
     out.push("</scrt related>".to_string());
@@ -557,7 +668,10 @@ fn format_graph(
     if graph.is_empty() {
         return format!("<scrt graph name=\"{root}\">No relationships found.</scrt graph>\n");
     }
-    let mut out = vec![format!("<scrt graph name=\"{root}\" nodes=\"{}\" max_depth=\"{max_depth}\">", graph.len())];
+    let mut out = vec![format!(
+        "<scrt graph name=\"{root}\" nodes=\"{}\" max_depth=\"{max_depth}\">",
+        graph.len()
+    )];
     for g in graph {
         let indent = "  ".repeat(g.depth);
         let dir = match g.direction {
@@ -570,7 +684,11 @@ fn format_graph(
             g.via,
             g.stash_name,
             g.relation.rel_type,
-            if g.relation.note.is_empty() { String::new() } else { format!(" \"{}\"", g.relation.note) }
+            if g.relation.note.is_empty() {
+                String::new()
+            } else {
+                format!(" \"{}\"", g.relation.note)
+            }
         ));
     }
     out.push("</scrt graph>".to_string());

@@ -82,7 +82,10 @@ fn scrt_similar_is_present_and_well_formed() {
     assert!(props["match"].is_object(), "scrt_similar.match param");
     // `match` enumerates the three axes.
     let axes = props["match"]["enum"].as_array().unwrap();
-    assert!(axes.contains(&Value::from("vector")), "vector axis advertised");
+    assert!(
+        axes.contains(&Value::from("vector")),
+        "vector axis advertised"
+    );
 }
 
 #[test]
@@ -94,7 +97,10 @@ fn search_tool_key_order_is_preserved() {
     let name_at = pretty.find("\"name\"").unwrap();
     let desc_at = pretty.find("\"description\"").unwrap();
     let schema_at = pretty.find("\"input_schema\"").unwrap();
-    assert!(name_at < desc_at && desc_at < schema_at, "tool key order drifted");
+    assert!(
+        name_at < desc_at && desc_at < schema_at,
+        "tool key order drifted"
+    );
 }
 
 #[test]

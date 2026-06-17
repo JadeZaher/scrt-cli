@@ -15,7 +15,9 @@ use scrt_core::palace::ops::{
 };
 use scrt_core::palace::prune::{prune_expired, prune_keep, prune_older_than, prune_tag};
 use scrt_core::palace::relations::{add_relation, traversal_graph, Direction};
-use scrt_core::palace::{compose_to_sources_path, default_palace_path, except_to_sources_path, intersect_to_sources_path};
+use scrt_core::palace::{
+    compose_to_sources_path, default_palace_path, except_to_sources_path, intersect_to_sources_path,
+};
 use scrt_core::palace::{FilePalace, Palace};
 use scrt_core::types::{Effort, SearchOptions, SortMode, Strategy, WindowCurve};
 use scrt_core::SourceInput;
@@ -53,10 +55,16 @@ pub struct ServerError {
 
 impl ServerError {
     fn bad(msg: impl Into<String>) -> Self {
-        ServerError { code: ErrorCode::BadParams, message: msg.into() }
+        ServerError {
+            code: ErrorCode::BadParams,
+            message: msg.into(),
+        }
     }
     fn internal(msg: impl Into<String>) -> Self {
-        ServerError { code: ErrorCode::Internal, message: msg.into() }
+        ServerError {
+            code: ErrorCode::Internal,
+            message: msg.into(),
+        }
     }
     /// JSON form: `{ "code": "...", "message": "..." }`.
     pub fn to_json(&self) -> Value {
@@ -82,7 +90,11 @@ fn as_str_array(params: &Value, key: &str) -> Vec<String> {
     params
         .get(key)
         .and_then(Value::as_array)
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(str::to_string))
+                .collect()
+        })
         .unwrap_or_default()
 }
 fn as_str_array_either(params: &Value, a: &str, b: &str) -> Vec<String> {
@@ -189,7 +201,9 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
                     serde_json::from_str(&format_agent_json(&envelope))
                         .map_err(|e| ServerError::internal(e.to_string()))
                 }
-                _ => serde_json::to_value(&result).map_err(|e| ServerError::internal(e.to_string())),
+                _ => {
+                    serde_json::to_value(&result).map_err(|e| ServerError::internal(e.to_string()))
+                }
             }
         }
 
@@ -240,10 +254,12 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
 
         // ── Palace: stash ───────────────────────────────────────────────
         "palace.stash" => {
-            let name = as_str(params, "name")
-                .ok_or_else(|| ServerError::bad("palace.stash: params.name (string) is required"))?;
-            let note = as_str(params, "note")
-                .ok_or_else(|| ServerError::bad("palace.stash: params.note (string) is required"))?;
+            let name = as_str(params, "name").ok_or_else(|| {
+                ServerError::bad("palace.stash: params.name (string) is required")
+            })?;
+            let note = as_str(params, "note").ok_or_else(|| {
+                ServerError::bad("palace.stash: params.note (string) is required")
+            })?;
             // Accept pre-built nodes (Node[]). Default empty.
             let nodes: Vec<scrt_core::types::Node> = params
                 .get("nodes")
@@ -274,7 +290,9 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
                 &options,
             )
             .map_err(ServerError::internal)?;
-            palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+            palace
+                .save()
+                .map_err(|e| ServerError::internal(e.to_string()))?;
             Ok(json!({ "action": action_str(action), "name": name }))
         }
 
@@ -286,7 +304,9 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
             let mut palace = FilePalace::load(&path, &SystemClock);
             let ok = scrt_core::palace::ops::drop_stash(palace.data_mut(), &name);
             if ok {
-                palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+                palace
+                    .save()
+                    .map_err(|e| ServerError::internal(e.to_string()))?;
             }
             Ok(json!({ "dropped": ok }))
         }
@@ -315,8 +335,9 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
                 .map_err(ServerError::internal)
         }
         "palace.except" => {
-            let base = as_str(params, "base")
-                .ok_or_else(|| ServerError::bad("palace.except: params.base (string) is required"))?;
+            let base = as_str(params, "base").ok_or_else(|| {
+                ServerError::bad("palace.except: params.base (string) is required")
+            })?;
             let exclude = as_str_array(params, "exclude");
             if exclude.is_empty() {
                 return Err(ServerError::bad(
@@ -344,16 +365,26 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
             let note = as_str(params, "note").unwrap_or_default();
             let path = palace_path(params);
             let mut palace = FilePalace::load(&path, &SystemClock);
-            add_relation(palace.data_mut(), &SystemClock, &from, &to, &rel_type, &note)
-                .map_err(ServerError::internal)?;
-            palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+            add_relation(
+                palace.data_mut(),
+                &SystemClock,
+                &from,
+                &to,
+                &rel_type,
+                &note,
+            )
+            .map_err(ServerError::internal)?;
+            palace
+                .save()
+                .map_err(|e| ServerError::internal(e.to_string()))?;
             Ok(json!({ "linked": true, "from": from, "to": to, "type": rel_type }))
         }
 
         // ── Palace: graph ───────────────────────────────────────────────
         "palace.graph" => {
-            let name = as_str(params, "name")
-                .ok_or_else(|| ServerError::bad("palace.graph: params.name (string) is required"))?;
+            let name = as_str(params, "name").ok_or_else(|| {
+                ServerError::bad("palace.graph: params.name (string) is required")
+            })?;
             let depth = as_usize(params, "depth").unwrap_or(3);
             let palace = FilePalace::load(palace_path(params), &SystemClock);
             let graph = traversal_graph(palace.data(), &name, depth);
@@ -442,19 +473,24 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
             let mut palace = FilePalace::load(&path, &SystemClock);
             let r = prune_expired(palace.data_mut(), &SystemClock, dry);
             if !dry {
-                palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+                palace
+                    .save()
+                    .map_err(|e| ServerError::internal(e.to_string()))?;
             }
             Ok(prune_to_json(&r))
         }
         "palace.prune_tag" => {
-            let tag = as_str(params, "tag")
-                .ok_or_else(|| ServerError::bad("palace.prune_tag: params.tag (string) is required"))?;
+            let tag = as_str(params, "tag").ok_or_else(|| {
+                ServerError::bad("palace.prune_tag: params.tag (string) is required")
+            })?;
             let path = palace_path(params);
             let dry = as_bool(params, "dry_run");
             let mut palace = FilePalace::load(&path, &SystemClock);
             let r = prune_tag(palace.data_mut(), &tag, dry);
             if !dry {
-                palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+                palace
+                    .save()
+                    .map_err(|e| ServerError::internal(e.to_string()))?;
             }
             Ok(prune_to_json(&r))
         }
@@ -470,19 +506,24 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
             let r = prune_older_than(palace.data_mut(), &SystemClock, &duration, dry)
                 .map_err(ServerError::bad)?;
             if !dry {
-                palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+                palace
+                    .save()
+                    .map_err(|e| ServerError::internal(e.to_string()))?;
             }
             Ok(prune_to_json(&r))
         }
         "palace.prune_keep" => {
-            let n = as_usize(params, "n")
-                .ok_or_else(|| ServerError::bad("palace.prune_keep: params.n (number) is required"))?;
+            let n = as_usize(params, "n").ok_or_else(|| {
+                ServerError::bad("palace.prune_keep: params.n (number) is required")
+            })?;
             let path = palace_path(params);
             let dry = as_bool(params, "dry_run");
             let mut palace = FilePalace::load(&path, &SystemClock);
             let r = prune_keep(palace.data_mut(), n, dry);
             if !dry {
-                palace.save().map_err(|e| ServerError::internal(e.to_string()))?;
+                palace
+                    .save()
+                    .map_err(|e| ServerError::internal(e.to_string()))?;
             }
             Ok(prune_to_json(&r))
         }

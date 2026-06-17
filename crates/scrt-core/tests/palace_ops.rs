@@ -36,12 +36,30 @@ fn node(id: &str, line: u64) -> scrt_core::types::Node {
 }
 
 fn meta() -> StashSearch {
-    StashSearch { pattern: "p".into(), effort: "normal".into(), sources_count: 1 }
+    StashSearch {
+        pattern: "p".into(),
+        effort: "normal".into(),
+        sources_count: 1,
+    }
 }
 
 fn seed(p: &mut PalaceData, clock: &dyn Clock, name: &str, tags: &[String], ttl: Option<&str>) {
-    let opts = StashOptions { ttl: ttl.map(String::from), ..Default::default() };
-    add_stash(p, clock, name, "note", &[node("f.txt", 1)], meta(), &[], tags, &opts).unwrap();
+    let opts = StashOptions {
+        ttl: ttl.map(String::from),
+        ..Default::default()
+    };
+    add_stash(
+        p,
+        clock,
+        name,
+        "note",
+        &[node("f.txt", 1)],
+        meta(),
+        &[],
+        tags,
+        &opts,
+    )
+    .unwrap();
 }
 
 #[test]
@@ -53,7 +71,10 @@ fn prune_tag_removes_only_tagged() {
     seed(&mut p, &clock, "c", &["temp".into()], None);
     let r = prune_tag(&mut p, "temp", false);
     assert_eq!(r.removed, 2);
-    assert_eq!(p.stashes.keys().map(String::as_str).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(
+        p.stashes.keys().map(String::as_str).collect::<Vec<_>>(),
+        vec!["a"]
+    );
 }
 
 #[test]
@@ -103,8 +124,12 @@ fn relations_and_graph_traversal() {
     // get_related on b: outbound to c, inbound from a.
     let rel = get_related(&p, "b");
     assert_eq!(rel.len(), 2);
-    assert!(rel.iter().any(|r| r.direction == Direction::Outbound && r.stash_name == "c"));
-    assert!(rel.iter().any(|r| r.direction == Direction::Inbound && r.stash_name == "a"));
+    assert!(rel
+        .iter()
+        .any(|r| r.direction == Direction::Outbound && r.stash_name == "c"));
+    assert!(rel
+        .iter()
+        .any(|r| r.direction == Direction::Inbound && r.stash_name == "a"));
 
     // graph from a, depth 3: reaches b (depth 1) and c (depth 2).
     let g = traversal_graph(&p, "a", 3);

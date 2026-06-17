@@ -104,7 +104,10 @@ fn trigrams(s: &str) -> Vec<String> {
 fn escape_regex(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {
-        if matches!(c, '.' | '*' | '+' | '?' | '^' | '$' | '{' | '}' | '(' | ')' | '|' | '[' | ']' | '\\') {
+        if matches!(
+            c,
+            '.' | '*' | '+' | '?' | '^' | '$' | '{' | '}' | '(' | ')' | '|' | '[' | ']' | '\\'
+        ) {
             out.push('\\');
         }
         out.push(c);
@@ -137,7 +140,10 @@ pub fn build_fuzzy_regex(search: &str) -> Result<String, FuzzyError> {
         // Regex authors usually mean it literally; pass through.
         return Ok(search.to_string());
     }
-    let words: Vec<&str> = trimmed.split_whitespace().filter(|t| !t.is_empty()).collect();
+    let words: Vec<&str> = trimmed
+        .split_whitespace()
+        .filter(|t| !t.is_empty())
+        .collect();
     let mut all: Vec<String> = Vec::new();
     let mut seen = std::collections::BTreeSet::new();
     for word in &words {
@@ -215,7 +221,10 @@ mod tests {
 
     #[test]
     fn levenshtein_basics() {
-        assert_eq!(levenshtein(&chars("kitten"), &chars("sitting"), usize::MAX), 3);
+        assert_eq!(
+            levenshtein(&chars("kitten"), &chars("sitting"), usize::MAX),
+            3
+        );
         assert_eq!(levenshtein(&chars("abc"), &chars("abc"), usize::MAX), 0);
         assert_eq!(levenshtein(&chars(""), &chars("abc"), usize::MAX), 3);
     }
@@ -258,10 +267,12 @@ mod tests {
         let line = "the PrvderiContext value";
         let pos = line.find("Prvderi").unwrap();
         let pos_chars = line[..pos].chars().count();
-        assert!(verify_fuzzy(line, pos_chars, "ProviderContext", 2) || {
-            // ProviderContext is far (>2) from PrvderiContext? Use a closer typo.
-            true
-        });
+        assert!(
+            verify_fuzzy(line, pos_chars, "ProviderContext", 2) || {
+                // ProviderContext is far (>2) from PrvderiContext? Use a closer typo.
+                true
+            }
+        );
     }
 
     #[test]

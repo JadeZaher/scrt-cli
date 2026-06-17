@@ -109,7 +109,8 @@ pub struct RawArgs {
 }
 
 fn require<'a>(flag: &str, argv: &'a [String], i: usize) -> Result<&'a String, ParseError> {
-    argv.get(i).ok_or_else(|| ParseError(format!("Missing value for {flag}")))
+    argv.get(i)
+        .ok_or_else(|| ParseError(format!("Missing value for {flag}")))
 }
 
 fn parse_int(flag: &str, s: &str) -> Result<usize, ParseError> {
@@ -167,7 +168,10 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
             }
             "--max-tokens" => {
                 i += 1;
-                a.max_tokens = Some(parse_int("--max-tokens", require("--max-tokens", argv, i)?)?);
+                a.max_tokens = Some(parse_int(
+                    "--max-tokens",
+                    require("--max-tokens", argv, i)?,
+                )?);
             }
             "--strategy" => {
                 i += 1;
@@ -175,7 +179,11 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                 a.strategy = Some(match v.as_str() {
                     "fill" => Strategy::Fill,
                     "deep" => Strategy::Deep,
-                    _ => return Err(ParseError(format!("--strategy must be fill or deep, got: {v}"))),
+                    _ => {
+                        return Err(ParseError(format!(
+                            "--strategy must be fill or deep, got: {v}"
+                        )))
+                    }
                 });
             }
             "-e" | "--effort" => {
@@ -253,7 +261,8 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
             "--mp-list" => a.mp_list = true,
             "--mp-list-tag" => {
                 i += 1;
-                a.mp_list_tags.push(require("--mp-list-tag", argv, i)?.clone());
+                a.mp_list_tags
+                    .push(require("--mp-list-tag", argv, i)?.clone());
             }
             "--mp-get" => {
                 i += 1;
@@ -310,7 +319,10 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
             }
             "--mp-prune-keep" => {
                 i += 1;
-                a.mp_prune_keep = Some(parse_int("--mp-prune-keep", require("--mp-prune-keep", argv, i)?)?);
+                a.mp_prune_keep = Some(parse_int(
+                    "--mp-prune-keep",
+                    require("--mp-prune-keep", argv, i)?,
+                )?);
             }
             "--mp-prune-tag" => {
                 i += 1;
@@ -380,10 +392,23 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                 i += 1;
                 let v = require("--match", argv, i)?;
                 match v.as_str() {
-                    "note" => { a.mp_similar_match_full = false; a.mp_similar_match_vector = false; }
-                    "full" => { a.mp_similar_match_full = true; a.mp_similar_match_vector = false; }
-                    "vector" => { a.mp_similar_match_full = false; a.mp_similar_match_vector = true; }
-                    _ => return Err(ParseError(format!("--match must be note|full|vector, got: {v}"))),
+                    "note" => {
+                        a.mp_similar_match_full = false;
+                        a.mp_similar_match_vector = false;
+                    }
+                    "full" => {
+                        a.mp_similar_match_full = true;
+                        a.mp_similar_match_vector = false;
+                    }
+                    "vector" => {
+                        a.mp_similar_match_full = false;
+                        a.mp_similar_match_vector = true;
+                    }
+                    _ => {
+                        return Err(ParseError(format!(
+                            "--match must be note|full|vector, got: {v}"
+                        )))
+                    }
                 }
             }
             "--top" => {
@@ -393,9 +418,12 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
             "--no-suggest-links" => a.mp_no_suggest_links = true,
             "--link-threshold" => {
                 i += 1;
-                let v: u8 = parse_int("--link-threshold", require("--link-threshold", argv, i)?)? as u8;
+                let v: u8 =
+                    parse_int("--link-threshold", require("--link-threshold", argv, i)?)? as u8;
                 if v > 100 {
-                    return Err(ParseError(format!("--link-threshold must be 0..100, got: {v}")));
+                    return Err(ParseError(format!(
+                        "--link-threshold must be 0..100, got: {v}"
+                    )));
                 }
                 a.mp_link_threshold = Some(v);
             }
@@ -418,7 +446,11 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                     "default" => SortMode::Default,
                     "recent" => SortMode::Recent,
                     "oldest" => SortMode::Oldest,
-                    _ => return Err(ParseError(format!("--sort must be default|recent|oldest, got: {v}"))),
+                    _ => {
+                        return Err(ParseError(format!(
+                            "--sort must be default|recent|oldest, got: {v}"
+                        )))
+                    }
                 });
             }
             "--window-curve" => {
@@ -428,7 +460,11 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                     "flat" => WindowCurve::Flat,
                     "linear" => WindowCurve::Linear,
                     "log" => WindowCurve::Log,
-                    _ => return Err(ParseError(format!("--window-curve must be flat|linear|log, got: {v}"))),
+                    _ => {
+                        return Err(ParseError(format!(
+                            "--window-curve must be flat|linear|log, got: {v}"
+                        )))
+                    }
                 });
             }
             "--clip" => {
@@ -448,7 +484,9 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                 i += 1;
                 let v = require("--port", argv, i)?;
                 a.serve_port =
-                    Some(v.parse().map_err(|_| ParseError(format!("--port expects a port number, got: {v}")))?);
+                    Some(v.parse().map_err(|_| {
+                        ParseError(format!("--port expects a port number, got: {v}"))
+                    })?);
             }
             "--host" => {
                 i += 1;

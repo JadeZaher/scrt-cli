@@ -80,7 +80,11 @@ impl SearchConfig {
     /// Build a config from a pattern + inputs at a given effort, filling
     /// before/after/max_nodes from the preset. Convenience for the debug
     /// binary and tests; the real CLI parser lands in Prompt 6.
-    pub fn from_effort(pattern: impl Into<String>, inputs: Vec<SourceInput>, effort: Effort) -> Self {
+    pub fn from_effort(
+        pattern: impl Into<String>,
+        inputs: Vec<SourceInput>,
+        effort: Effort,
+    ) -> Self {
         let (b, a, n) = effort_preset(effort);
         SearchConfig {
             pattern: pattern.into(),
@@ -123,7 +127,11 @@ fn resolve_inputs(
         let files = classify_path_specs(&path_specs, opts, stdin_content)?;
         for f in files {
             out.push(ResolvedSource {
-                source: Source { id: f, source_type: SourceType::File, label: None },
+                source: Source {
+                    id: f,
+                    source_type: SourceType::File,
+                    label: None,
+                },
                 content: None,
             });
         }
@@ -133,11 +141,18 @@ fn resolve_inputs(
         match input {
             SourceInput::Command(cmd) => {
                 let content = capture_command(cmd)?;
-                out.push(ResolvedSource { source: command_source(cmd), content: Some(content) });
+                out.push(ResolvedSource {
+                    source: command_source(cmd),
+                    content: Some(content),
+                });
             }
             SourceInput::Stdin => {
                 out.push(ResolvedSource {
-                    source: Source { id: "stdin".into(), source_type: SourceType::Stdin, label: None },
+                    source: Source {
+                        id: "stdin".into(),
+                        source_type: SourceType::Stdin,
+                        label: None,
+                    },
                     content: Some(stdin_content.unwrap_or("").to_string()),
                 });
             }
@@ -145,7 +160,11 @@ fn resolve_inputs(
             SourceInput::Url(url) => {
                 let content = crate::sources::capture_url(url)?;
                 out.push(ResolvedSource {
-                    source: Source { id: url.clone(), source_type: SourceType::Url, label: None },
+                    source: Source {
+                        id: url.clone(),
+                        source_type: SourceType::Url,
+                        label: None,
+                    },
                     content: Some(content),
                 });
             }
@@ -172,8 +191,12 @@ pub fn search(config: &SearchConfig) -> Result<SearchResult, SearchError> {
 pub fn search_with_meta(config: &SearchConfig) -> Result<(SearchResult, SearchMeta), SearchError> {
     let t0 = Instant::now();
 
-    let resolved = resolve_inputs(&config.inputs, &config.rg_options, config.stdin_content.as_deref())
-        .map_err(SearchError::Io)?;
+    let resolved = resolve_inputs(
+        &config.inputs,
+        &config.rg_options,
+        config.stdin_content.as_deref(),
+    )
+    .map_err(SearchError::Io)?;
 
     // Fuzzy: transform the pattern into a trigram-union regex. It "fires"
     // only if the transform actually changed the pattern (regex-meta
@@ -207,9 +230,13 @@ pub fn search_with_meta(config: &SearchConfig) -> Result<(SearchResult, SearchMe
             {
                 let collect = |m: Match| matches.push(m);
                 let res = match (&rs.source.source_type, &rs.content) {
-                    (_, Some(content)) => {
-                        search_content(&matcher, &config.rg_options, rs.source.clone(), content, collect)
-                    }
+                    (_, Some(content)) => search_content(
+                        &matcher,
+                        &config.rg_options,
+                        rs.source.clone(),
+                        content,
+                        collect,
+                    ),
                     (SourceType::File, None) => {
                         search_file(&matcher, &config.rg_options, &rs.source.id, collect)
                     }
@@ -312,7 +339,11 @@ pub fn search_with_meta(config: &SearchConfig) -> Result<(SearchResult, SearchMe
     // 9. Pagination — slice AFTER budgeting, re-id within page.
     let (mut paged, pagination) = paginate(
         budgeted,
-        PaginationOptions { page: config.page, page_size: config.page_size, all: config.all },
+        PaginationOptions {
+            page: config.page,
+            page_size: config.page_size,
+            all: config.all,
+        },
     );
     for (i, n) in paged.iter_mut().enumerate() {
         n.id = (i + 1) as u64;
@@ -350,7 +381,10 @@ pub fn search_with_meta(config: &SearchConfig) -> Result<(SearchResult, SearchMe
 
     // `literal_match_count` mirrors v0.x's envelope default of
     // `result.total_nodes`; when fuzzy fired the envelope zeroes it itself.
-    let meta = SearchMeta { fuzzy_fired, literal_match_count: total_nodes };
+    let meta = SearchMeta {
+        fuzzy_fired,
+        literal_match_count: total_nodes,
+    };
     Ok((result, meta))
 }
 
@@ -375,12 +409,18 @@ fn sort_by_mtime(nodes: &mut [Node], sort: SortMode) {
             }
         });
     }
-    let dir = if matches!(sort, SortMode::Recent) { -1.0 } else { 1.0 };
+    let dir = if matches!(sort, SortMode::Recent) {
+        -1.0
+    } else {
+        1.0
+    };
     nodes.sort_by(|a, b| {
         let ma = *mtimes.get(&a.source.id).unwrap_or(&0.0);
         let mb = *mtimes.get(&b.source.id).unwrap_or(&0.0);
         if ma != mb {
-            (dir * (ma - mb)).partial_cmp(&0.0).unwrap_or(std::cmp::Ordering::Equal)
+            (dir * (ma - mb))
+                .partial_cmp(&0.0)
+                .unwrap_or(std::cmp::Ordering::Equal)
         } else {
             a.match_line.cmp(&b.match_line)
         }

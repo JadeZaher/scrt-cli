@@ -66,21 +66,74 @@ fn cases() -> Vec<Case> {
         base("quick", Effort::Quick),
         base("scan", Effort::Scan),
         base("deep", Effort::Deep),
-        Case { clip: Some(3), ..base("scan-clip3", Effort::Scan) },
-        Case { clip: Some(20), ..base("scan-clip20", Effort::Scan) },
-        Case { max_nodes: Some(2), ..base("maxnodes2", Effort::Scan) },
-        Case { max_tokens: Some(10), ..base("maxtokens10", Effort::Normal) },
-        Case { icase: true, ..base("icase", Effort::Normal) },
-        Case { word: true, ..base("word", Effort::Normal) },
-        Case { curve: WindowCurve::Linear, ..base("curve-linear", Effort::Normal) },
-        Case { curve: WindowCurve::Log, ..base("curve-log", Effort::Normal) },
-        Case { max_tokens: Some(12), strategy: Strategy::Deep, ..base("strategy-deep", Effort::Normal) },
-        Case { fmt: Fmt::AgentJson, ..base("agentjson-ok", Effort::Normal) },
-        Case { max_nodes: Some(3), fmt: Fmt::AgentJson, ..base("agentjson-fill", Effort::Scan) },
-        Case { max_nodes: Some(99), no_fill: true, fmt: Fmt::AgentJson, ..base("agentjson-nofill", Effort::Scan) },
-        Case { fmt: Fmt::AgentJson, pattern_override: Some("zzznope"), ..base("agentjson-nomatch", Effort::Normal) },
-        Case { fuzzy: true, clip: Some(10), ..base("fuzzy-scan", Effort::Scan) },
-        Case { fuzzy: true, clip: Some(10), fmt: Fmt::AgentJson, ..base("fuzzy-agentjson", Effort::Scan) },
+        Case {
+            clip: Some(3),
+            ..base("scan-clip3", Effort::Scan)
+        },
+        Case {
+            clip: Some(20),
+            ..base("scan-clip20", Effort::Scan)
+        },
+        Case {
+            max_nodes: Some(2),
+            ..base("maxnodes2", Effort::Scan)
+        },
+        Case {
+            max_tokens: Some(10),
+            ..base("maxtokens10", Effort::Normal)
+        },
+        Case {
+            icase: true,
+            ..base("icase", Effort::Normal)
+        },
+        Case {
+            word: true,
+            ..base("word", Effort::Normal)
+        },
+        Case {
+            curve: WindowCurve::Linear,
+            ..base("curve-linear", Effort::Normal)
+        },
+        Case {
+            curve: WindowCurve::Log,
+            ..base("curve-log", Effort::Normal)
+        },
+        Case {
+            max_tokens: Some(12),
+            strategy: Strategy::Deep,
+            ..base("strategy-deep", Effort::Normal)
+        },
+        Case {
+            fmt: Fmt::AgentJson,
+            ..base("agentjson-ok", Effort::Normal)
+        },
+        Case {
+            max_nodes: Some(3),
+            fmt: Fmt::AgentJson,
+            ..base("agentjson-fill", Effort::Scan)
+        },
+        Case {
+            max_nodes: Some(99),
+            no_fill: true,
+            fmt: Fmt::AgentJson,
+            ..base("agentjson-nofill", Effort::Scan)
+        },
+        Case {
+            fmt: Fmt::AgentJson,
+            pattern_override: Some("zzznope"),
+            ..base("agentjson-nomatch", Effort::Normal)
+        },
+        Case {
+            fuzzy: true,
+            clip: Some(10),
+            ..base("fuzzy-scan", Effort::Scan)
+        },
+        Case {
+            fuzzy: true,
+            clip: Some(10),
+            fmt: Fmt::AgentJson,
+            ..base("fuzzy-agentjson", Effort::Scan)
+        },
     ]
 }
 

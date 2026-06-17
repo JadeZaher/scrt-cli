@@ -131,7 +131,9 @@ fn list_files(raw: &RawArgs) -> Result<i32, AppError> {
     let mut count = 0;
     for root in roots {
         let mut wb = ignore::WalkBuilder::new(&root);
-        wb.hidden(!raw.hidden).git_ignore(!raw.no_ignore).ignore(!raw.no_ignore);
+        wb.hidden(!raw.hidden)
+            .git_ignore(!raw.no_ignore)
+            .ignore(!raw.no_ignore);
         for entry in wb.build().flatten() {
             if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
                 println!("{}", entry.path().display());
@@ -219,7 +221,8 @@ fn search(raw: &RawArgs) -> Result<i32, AppError> {
         stdin_content,
     };
 
-    let (result, meta) = search_with_meta(&config).map_err(|e| AppError::Unexpected(e.to_string()))?;
+    let (result, meta) =
+        search_with_meta(&config).map_err(|e| AppError::Unexpected(e.to_string()))?;
 
     palace_cli::maybe_stash(raw, &result)?;
 

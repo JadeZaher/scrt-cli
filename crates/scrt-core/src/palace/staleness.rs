@@ -38,7 +38,10 @@ pub fn compute_node_staleness(node: &StashedNode) -> StaleState {
                     Ok(content) => {
                         // v0.x splits on /\r?\n/; match_line is 1-indexed.
                         let lines: Vec<&str> = split_crlf(&content);
-                        let line_text = lines.get((node.match_line as usize).wrapping_sub(1)).copied().unwrap_or("");
+                        let line_text = lines
+                            .get((node.match_line as usize).wrapping_sub(1))
+                            .copied()
+                            .unwrap_or("");
                         hash_line(line_text)
                     }
                     Err(_) => return StaleState::Stale(StaleReason::ContentDrifted),

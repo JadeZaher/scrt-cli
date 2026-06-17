@@ -26,7 +26,10 @@ pub struct Palace {
 
 impl Default for Palace {
     fn default() -> Self {
-        Palace { version: PALACE_VERSION, stashes: indexmap::IndexMap::new() }
+        Palace {
+            version: PALACE_VERSION,
+            stashes: indexmap::IndexMap::new(),
+        }
     }
 }
 

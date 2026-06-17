@@ -64,7 +64,9 @@ async fn handle_post(State(()): State<()>, body: axum::body::Bytes) -> impl Into
     let Some(method) = method else {
         return (
             StatusCode::BAD_REQUEST,
-            Json(json!({ "error": { "code": "BAD_PARAMS", "message": "method (string) is required" } })),
+            Json(
+                json!({ "error": { "code": "BAD_PARAMS", "message": "method (string) is required" } }),
+            ),
         );
     };
     let params = match body.get("params") {
@@ -94,7 +96,9 @@ mod tests {
     use tower::ServiceExt; // for `oneshot`
 
     async fn body_json(resp: axum::response::Response) -> Value {
-        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
         serde_json::from_slice(&bytes).unwrap()
     }
 

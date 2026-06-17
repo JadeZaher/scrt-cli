@@ -37,7 +37,10 @@ fn node_palace_parses_with_expected_shape() {
     assert!(p.stashes["db"].expires_at.is_some());
     // Fractional mtime preserved as a float.
     let mtime = p.stashes["auth"].nodes[0].source_mtime_ms.unwrap();
-    assert!(mtime.fract() != 0.0, "expected fractional mtime, got {mtime}");
+    assert!(
+        mtime.fract() != 0.0,
+        "expected fractional mtime, got {mtime}"
+    );
 }
 
 #[test]

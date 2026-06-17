@@ -106,7 +106,13 @@ impl FilePalace {
                     parsed.version = PALACE_VERSION;
                 }
                 let snapshot = parsed.clone();
-                FilePalace { path, data: parsed, snapshot, tainted: false, force_reset }
+                FilePalace {
+                    path,
+                    data: parsed,
+                    snapshot,
+                    tainted: false,
+                    force_reset,
+                }
             }
             Err(_) => {
                 // Corrupt: preserve a forensic backup, mark tainted.
@@ -192,9 +198,10 @@ impl Palace for FilePalace {
 
         let mut merged = if self.path.exists() {
             match std::fs::read_to_string(&self.path) {
-                Ok(raw) if raw.trim().is_empty() => {
-                    PalaceData { version: self.data.version, stashes: Default::default() }
-                }
+                Ok(raw) if raw.trim().is_empty() => PalaceData {
+                    version: self.data.version,
+                    stashes: Default::default(),
+                },
                 Ok(raw) => match serde_json::from_str::<PalaceData>(&raw) {
                     Ok(on_disk) => on_disk,
                     Err(_) => PalaceData {
@@ -208,7 +215,10 @@ impl Palace for FilePalace {
                 },
             }
         } else {
-            PalaceData { version: self.data.version, stashes: Default::default() }
+            PalaceData {
+                version: self.data.version,
+                stashes: Default::default(),
+            }
         };
 
         for name in &removed_by_us {
@@ -230,7 +240,9 @@ impl Palace for FilePalace {
         let body = serde_json::to_string_pretty(&self.data)
             .map_err(|e| PalaceError::Io(e.to_string()))?
             + "\n";
-        let tmp = self.path.with_extension(format!("tmp.{}", std::process::id()));
+        let tmp = self
+            .path
+            .with_extension(format!("tmp.{}", std::process::id()));
         std::fs::write(&tmp, body).map_err(|e| PalaceError::Io(e.to_string()))?;
         std::fs::rename(&tmp, &self.path).map_err(|e| {
             let _ = std::fs::remove_file(&tmp);
@@ -249,7 +261,9 @@ pub struct MemoryPalace {
 
 impl MemoryPalace {
     pub fn new() -> Self {
-        MemoryPalace { data: PalaceData::empty() }
+        MemoryPalace {
+            data: PalaceData::empty(),
+        }
     }
     /// Seed an in-memory palace from existing data (e.g. cloned from a file).
     pub fn from_data(data: PalaceData) -> Self {
@@ -280,7 +294,9 @@ pub fn default_palace_path() -> PathBuf {
     }
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     if let Some(git_root) = find_git_root(&cwd) {
-        return git_root.join(DEFAULT_PALACE_DIR).join(DEFAULT_PALACE_FILENAME);
+        return git_root
+            .join(DEFAULT_PALACE_DIR)
+            .join(DEFAULT_PALACE_FILENAME);
     }
     if let Some(existing) = find_existing_palace(&cwd) {
         return existing;
@@ -357,7 +373,9 @@ pub struct Registry {
 
 impl Registry {
     pub fn new() -> Self {
-        Registry { palaces: std::collections::HashMap::new() }
+        Registry {
+            palaces: std::collections::HashMap::new(),
+        }
     }
 
     /// Open (or create) a file-backed palace under `id`. Idempotent: an
@@ -381,7 +399,9 @@ impl Registry {
     }
 
     pub fn get_mut(&mut self, id: &str) -> Option<&mut (dyn Palace + Send)> {
-        self.palaces.get_mut(id).map(|b| b.as_mut() as &mut (dyn Palace + Send))
+        self.palaces
+            .get_mut(id)
+            .map(|b| b.as_mut() as &mut (dyn Palace + Send))
     }
 
     /// Drop a palace from the registry (does not delete its file).

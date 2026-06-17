@@ -152,7 +152,12 @@ pub fn format_llm(result: &SearchResult) -> String {
         let pad = |n: u64| format!("{:>width$}", n, width = width);
 
         for (i, line) in node.context_before.iter().enumerate() {
-            out.push(format!("{} {} {}", pad(node.start_line + i as u64), "  ", line));
+            out.push(format!(
+                "{} {} {}",
+                pad(node.start_line + i as u64),
+                "  ",
+                line
+            ));
         }
         // match line, with **hit** highlight (no-color path).
         let (before, hit, after) = if let Some([s, e]) = node.match_spans.first().copied() {
@@ -169,7 +174,12 @@ pub fn format_llm(result: &SearchResult) -> String {
             after
         ));
         for (i, line) in node.context_after.iter().enumerate() {
-            out.push(format!("{} {} {}", pad(node.match_line + 1 + i as u64), "  ", line));
+            out.push(format!(
+                "{} {} {}",
+                pad(node.match_line + 1 + i as u64),
+                "  ",
+                line
+            ));
         }
     }
 

@@ -95,10 +95,11 @@ pub fn build_agent_envelope(result: &SearchResult, opts: EnvelopeOpts) -> AgentE
     } else if literal_matches == 0 && !opts.fuzzy_fired {
         status = EnvelopeStatus::NoMatches;
         warning = None;
-        next_suggestion =
-            Some("no matches — try simpler keywords or check the path".to_string());
+        next_suggestion = Some("no matches — try simpler keywords or check the path".to_string());
     } else if literal_matches > 50 && result.truncated {
-        warning = Some(format!("pattern matched {literal_matches} lines; consider narrowing"));
+        warning = Some(format!(
+            "pattern matched {literal_matches} lines; consider narrowing"
+        ));
     } else if opts.no_fill && result.nodes.len() < result.max_nodes {
         warning = Some(format!(
             "strict mode: only {} usable matches found (max_nodes={})",
@@ -111,7 +112,11 @@ pub fn build_agent_envelope(result: &SearchResult, opts: EnvelopeOpts) -> AgentE
         status,
         pattern: result.pattern.clone(),
         n_literal_matches: if opts.fuzzy_fired { 0 } else { literal_matches },
-        n_fuzzy_matches: if opts.fuzzy_fired { result.total_nodes } else { 0 },
+        n_fuzzy_matches: if opts.fuzzy_fired {
+            result.total_nodes
+        } else {
+            0
+        },
         fallback_used,
         warning,
         nodes: result.nodes.clone(),
@@ -131,7 +136,12 @@ mod tests {
     use super::*;
     use crate::types::{Effort, ResultStatus, Strategy};
 
-    fn result_with(total_nodes: usize, max_nodes: usize, truncated: bool, status: ResultStatus) -> SearchResult {
+    fn result_with(
+        total_nodes: usize,
+        max_nodes: usize,
+        truncated: bool,
+        status: ResultStatus,
+    ) -> SearchResult {
         SearchResult {
             pattern: "p".into(),
             effort: Effort::Normal,
@@ -173,12 +183,19 @@ mod tests {
         r.total_nodes = 3;
         let e = build_agent_envelope(
             &r,
-            EnvelopeOpts { fuzzy_fired: true, literal_match_count: Some(0), ..Default::default() },
+            EnvelopeOpts {
+                fuzzy_fired: true,
+                literal_match_count: Some(0),
+                ..Default::default()
+            },
         );
         assert_eq!(e.fallback_used, Some(FallbackUsed::Fuzzy));
         assert_eq!(e.n_literal_matches, 0);
         assert_eq!(e.n_fuzzy_matches, 3);
-        assert_eq!(e.warning.as_deref(), Some("literal pattern matched nothing; fell back to fuzzy"));
+        assert_eq!(
+            e.warning.as_deref(),
+            Some("literal pattern matched nothing; fell back to fuzzy")
+        );
     }
 
     #[test]
@@ -193,8 +210,18 @@ mod tests {
     fn no_fill_strict_warning() {
         let mut r = result_with(5, 30, false, ResultStatus::Ok);
         r.nodes = vec![sample_node()];
-        let e = build_agent_envelope(&r, EnvelopeOpts { no_fill: true, ..Default::default() });
-        assert!(e.warning.as_deref().unwrap().starts_with("strict mode: only"));
+        let e = build_agent_envelope(
+            &r,
+            EnvelopeOpts {
+                no_fill: true,
+                ..Default::default()
+            },
+        );
+        assert!(e
+            .warning
+            .as_deref()
+            .unwrap()
+            .starts_with("strict mode: only"));
         assert!(e.fallback_used.is_none()); // fill suppressed by no_fill
     }
 
@@ -204,8 +231,17 @@ mod tests {
         let e = build_agent_envelope(&r, EnvelopeOpts::default());
         let pretty = format_agent_json(&e);
         // The first keys in declaration order.
-        let want = ["status", "pattern", "n_literal_matches", "n_fuzzy_matches",
-                    "fallback_used", "warning", "nodes", "next_suggestion", "errors"];
+        let want = [
+            "status",
+            "pattern",
+            "n_literal_matches",
+            "n_fuzzy_matches",
+            "fallback_used",
+            "warning",
+            "nodes",
+            "next_suggestion",
+            "errors",
+        ];
         let mut idx = 0;
         for key in want {
             let needle = format!("\"{key}\"");

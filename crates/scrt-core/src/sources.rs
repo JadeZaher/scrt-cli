@@ -161,7 +161,9 @@ fn expand_glob(pattern: &str, opts: &SearchOptions) -> Vec<String> {
     // Root = longest leading path segment without glob meta, else ".".
     let root = glob_root(&normalized);
     let mut wb = ignore::WalkBuilder::new(&root);
-    wb.hidden(!opts.hidden).git_ignore(!opts.no_ignore).ignore(!opts.no_ignore);
+    wb.hidden(!opts.hidden)
+        .git_ignore(!opts.no_ignore)
+        .ignore(!opts.no_ignore);
     let mut out = Vec::new();
     for entry in wb.build().flatten() {
         if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
@@ -247,9 +249,16 @@ pub fn capture_command(cmd: &str) -> Result<String, String> {
 
     if !output.status.success() {
         // v0.x rejects on non-zero exit (unless truncated). Keep parity.
-        let code = output.status.code().map(|c| c.to_string()).unwrap_or_else(|| "signal".into());
+        let code = output
+            .status
+            .code()
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| "signal".into());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        let mut msg = format!("Command exited with code {code}: {}", &trimmed[..trimmed.len().min(200)]);
+        let mut msg = format!(
+            "Command exited with code {code}: {}",
+            &trimmed[..trimmed.len().min(200)]
+        );
         if !stderr.is_empty() {
             msg.push_str(&format!("\nstderr: {}", &stderr[..stderr.len().min(500)]));
         }
@@ -297,7 +306,10 @@ pub fn capture_url(url: &str) -> Result<String, String> {
         .user_agent("scrt/0.1 (+https://github.com/JadeZaher/scrt-cli)")
         .build()
         .map_err(|e| e.to_string())?;
-    let resp = client.get(url).send().map_err(|e| format!("Failed to fetch {url}: {e}"))?;
+    let resp = client
+        .get(url)
+        .send()
+        .map_err(|e| format!("Failed to fetch {url}: {e}"))?;
     if !resp.status().is_success() {
         return Err(format!("Failed to fetch {url}: {}", resp.status()));
     }
@@ -309,9 +321,17 @@ pub fn capture_url(url: &str) -> Result<String, String> {
         .to_lowercase();
     let text_ok = ct.is_empty()
         || ct.starts_with("text/")
-        || ["json", "xml", "yaml", "javascript", "csv", "html", "markdown"]
-            .iter()
-            .any(|t| ct.contains(t));
+        || [
+            "json",
+            "xml",
+            "yaml",
+            "javascript",
+            "csv",
+            "html",
+            "markdown",
+        ]
+        .iter()
+        .any(|t| ct.contains(t));
     if !text_ok {
         return Err(format!(
             "Refusing to fetch non-text content-type \"{ct}\" from {url}."
@@ -348,13 +368,9 @@ mod tests {
 
     #[test]
     fn glob_root_extraction() {
-        assert_eq!(glob_root("src/**/*.ts"), {
-            // src exists as a dir in this crate? Not necessarily; fall back
-            // logic still yields "src" only if it's a dir. Just assert no panic
-            // and a non-empty root.
-            let r = glob_root("src/**/*.ts");
-            r
-        });
+        // `src` may or may not be a dir here; either way the root is non-empty
+        // and extraction must not panic.
+        assert!(!glob_root("src/**/*.ts").is_empty());
         assert_eq!(glob_root("*.ts"), ".");
     }
 
