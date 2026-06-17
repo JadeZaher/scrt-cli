@@ -1,0 +1,77 @@
+{
+  "pattern": "alpha",
+  "effort": "scan",
+  "strategy": "fill",
+  "status": "ok",
+  "total_nodes": 3,
+  "total_tokens": 9,
+  "page_tokens": 9,
+  "sources_count": 1,
+  "truncated": false,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "context_before": [],
+      "match_text": "fn alpha() …",
+      "context_after": [],
+      "match_spans": [
+        [
+          3,
+          8
+        ]
+      ],
+      "tokens": 3
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 2,
+      "start_line": 2,
+      "end_line": 2,
+      "context_before": [],
+      "match_text": "…or alpha",
+      "context_after": [],
+      "match_spans": [
+        [
+          4,
+          9
+        ]
+      ],
+      "tokens": 3
+    },
+    {
+      "id": 3,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 4,
+      "start_line": 4,
+      "end_line": 4,
+      "context_before": [],
+      "match_text": "… = alpha();",
+      "context_after": [],
+      "match_spans": [
+        [
+          4,
+          9
+        ]
+      ],
+      "tokens": 3
+    }
+  ],
+  "duration_ms": 0,
+  "before_tokens": 20,
+  "after_tokens": 20,
+  "max_nodes": 100000
+}

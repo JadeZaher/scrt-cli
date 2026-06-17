@@ -1,0 +1,94 @@
+{
+  "pattern": "alpha",
+  "effort": "quick",
+  "strategy": "fill",
+  "status": "ok",
+  "total_nodes": 3,
+  "total_tokens": 68,
+  "page_tokens": 68,
+  "sources_count": 1,
+  "truncated": false,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 5,
+      "context_before": [],
+      "match_text": "fn alpha() {}",
+      "context_after": [
+        "// TODO refactor alpha",
+        "fn beta() {}",
+        "let x = alpha();",
+        ""
+      ],
+      "match_spans": [
+        [
+          3,
+          8
+        ]
+      ],
+      "tokens": 23
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 2,
+      "start_line": 1,
+      "end_line": 5,
+      "context_before": [
+        "fn alpha() {}"
+      ],
+      "match_text": "// TODO refactor alpha",
+      "context_after": [
+        "fn beta() {}",
+        "let x = alpha();",
+        ""
+      ],
+      "match_spans": [
+        [
+          17,
+          22
+        ]
+      ],
+      "tokens": 24
+    },
+    {
+      "id": 3,
+      "source": {
+        "id": "code.txt",
+        "type": "file"
+      },
+      "match_line": 4,
+      "start_line": 1,
+      "end_line": 5,
+      "context_before": [
+        "fn alpha() {}",
+        "// TODO refactor alpha",
+        "fn beta() {}"
+      ],
+      "match_text": "let x = alpha();",
+      "context_after": [
+        ""
+      ],
+      "match_spans": [
+        [
+          8,
+          13
+        ]
+      ],
+      "tokens": 21
+    }
+  ],
+  "duration_ms": 0,
+  "before_tokens": 200,
+  "after_tokens": 200,
+  "max_nodes": 10
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(scrt:*)",
+      "Bash(./target/release/scrt:*)",
+      "Bash(./target/debug/scrt:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo run -p scrt-cli:*)"
+    ],
+    "deny": [
+      "Bash(scrt --mp-drop:*)",
+      "Bash(scrt --mp-prune-all:*)",
+      "Bash(scrt evolve train:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/allow-scrt.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/allow-scrt.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

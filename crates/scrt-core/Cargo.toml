@@ -1,0 +1,32 @@
+[package]
+name = "scrt-core"
+description = "scrt engine: token-budgeted context-node search + mind palace (in-process port of mind-palace-graph)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+grep-searcher.workspace = true
+grep-regex.workspace = true
+grep-matcher.workspace = true
+ignore.workspace = true
+globset.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+indexmap.workspace = true
+sha1.workspace = true
+rayon.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+# reqwest is needed only for the URL source; gated so a pure CLI/library
+# build that never fetches a URL still works. The CLI path uses the
+# blocking client; the async server (Prompt 5) will add the async surface.
+reqwest = { workspace = true, optional = true, features = ["blocking"] }
+
+[features]
+default = []
+# Enables the URL source (`--url`).
+url-source = ["dep:reqwest"]

@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "stashes": {
+    "auth": {
+      "name": "auth",
+      "note": "Auth TODOs",
+      "tags": [
+        "p0",
+        "auth"
+      ],
+      "created_at": "2026-06-16T00:46:22.699Z",
+      "updated_at": "2026-06-16T00:46:51.881Z",
+      "expires_at": null,
+      "search": {
+        "pattern": "TODO",
+        "effort": "normal",
+        "sources_count": 1
+      },
+      "sources": [
+        "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\auth.ts"
+      ],
+      "nodes": [
+        {
+          "source": "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\auth.ts",
+          "file_path": "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\auth.ts",
+          "source_type": "file",
+          "match_line": 2,
+          "start_line": 1,
+          "end_line": 4,
+          "context_before": [
+            "function login() {}"
+          ],
+          "match_text": "// TODO add rate limiting",
+          "context_after": [
+            "function logout() {}",
+            ""
+          ],
+          "tokens": 27,
+          "source_mtime_ms": 1781568812581.033,
+          "match_line_hash": "60fdf0bfdefc"
+        }
+      ],
+      "file_paths": [
+        "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\auth.ts"
+      ],
+      "relations": [
+        {
+          "target": "db",
+          "type": "depends-on",
+          "note": "shared layer",
+          "created_at": "2026-06-16T00:46:51.881Z"
+        }
+      ]
+    },
+    "db": {
+      "name": "db",
+      "note": "DB TODOs",
+      "tags": [
+        "p1"
+      ],
+      "created_at": "2026-06-16T00:46:51.777Z",
+      "updated_at": "2026-06-16T00:46:51.777Z",
+      "expires_at": "2026-06-23T00:46:51.777Z",
+      "search": {
+        "pattern": "TODO",
+        "effort": "scan",
+        "sources_count": 1
+      },
+      "sources": [
+        "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\db.ts"
+      ],
+      "nodes": [
+        {
+          "source": "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\db.ts",
+          "file_path": "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\db.ts",
+          "source_type": "file",
+          "match_line": 2,
+          "start_line": 2,
+          "end_line": 2,
+          "context_before": [],
+          "match_text": "// TODO cache results",
+          "context_after": [],
+          "tokens": 6,
+          "source_mtime_ms": 1781568812581.033,
+          "match_line_hash": "cc5db5176565"
+        }
+      ],
+      "file_paths": [
+        "C:\\Users\\atooz\\Programming\\ai-utils-memory\\scrt-cli\\.palacegen\\src\\db.ts"
+      ],
+      "relations": []
+    }
+  }
+}

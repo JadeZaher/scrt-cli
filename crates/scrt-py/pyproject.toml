@@ -1,0 +1,36 @@
+# Proper Python packaging for the scrt in-process binding.
+#
+# Build/install with maturin (the PyO3 packaging tool):
+#     pip install maturin
+#     cd crates/scrt-py
+#     maturin develop --release        # installs `scrt_py` into the active env
+#   or build a wheel:
+#     maturin build --release           # -> target/wheels/scrt_py-*.whl
+#     pip install ../../target/wheels/scrt_py-*.whl
+#
+# maturin handles the .dll->.pyd / .so naming and puts it on the path, so
+# `import scrt_py` just works — no manual file copying. abi3 means one
+# wheel works across Python 3.9+ (incl. 3.14).
+#
+# Local Python 3.14 is newer than PyO3 0.23's pinned max; the env var below
+# (also set in the crate) makes the abi3 build forward-compatible.
+
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "scrt_py"
+description = "In-process bindings to the scrt engine (Speedy Context Retrieval Tool)"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dynamic = ["version"]
+
+[tool.maturin]
+# The crate's [lib] name is `scrt_py`; abi3 forward-compat env is needed
+# while local Python (3.14) outruns PyO3's pinned max.
+features = ["pyo3/extension-module"]

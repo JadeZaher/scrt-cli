@@ -1,0 +1,65 @@
+{
+  "status": "ok",
+  "pattern": "Provider",
+  "n_literal_matches": 2,
+  "n_fuzzy_matches": 0,
+  "fallback_used": null,
+  "warning": null,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 6,
+      "context_before": [],
+      "match_text": "the Provider config here",
+      "context_after": [
+        "call Provdier now",
+        "Provier too",
+        "unrelated line",
+        "Provider again",
+        ""
+      ],
+      "match_spans": [
+        [
+          4,
+          12
+        ]
+      ],
+      "tokens": 27
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 5,
+      "start_line": 1,
+      "end_line": 6,
+      "context_before": [
+        "the Provider config here",
+        "call Provdier now",
+        "Provier too",
+        "unrelated line"
+      ],
+      "match_text": "Provider again",
+      "context_after": [
+        ""
+      ],
+      "match_spans": [
+        [
+          0,
+          8
+        ]
+      ],
+      "tokens": 28
+    }
+  ],
+  "next_suggestion": null,
+  "errors": []
+}

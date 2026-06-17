@@ -1,0 +1,11 @@
+{
+  "status": "no_matches",
+  "pattern": "zzznope",
+  "n_literal_matches": 0,
+  "n_fuzzy_matches": 0,
+  "fallback_used": null,
+  "warning": null,
+  "nodes": [],
+  "next_suggestion": "no matches — try simpler keywords or check the path",
+  "errors": []
+}

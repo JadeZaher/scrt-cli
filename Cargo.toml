@@ -1,0 +1,75 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/scrt-core",
+    "crates/scrt-cli",
+    "crates/scrt-server",
+    "crates/scrt-napi",
+    "crates/scrt-py",
+    "crates/scrt-evolve",
+]
+
+# scrt-napi and scrt-py are cdylib FFI crates; they are members for
+# unified dependency resolution but are excluded from default `cargo build`
+# of the binary targets so a plain `cargo build` does not require the
+# Node toolchain / Python headers. Build them explicitly with `-p`.
+default-members = [
+    "crates/scrt-core",
+    "crates/scrt-cli",
+    "crates/scrt-server",
+    "crates/scrt-evolve",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.79"
+license = "MIT"
+repository = "https://github.com/JadeZaher/scrt-cli"
+authors = ["scrt-cli contributors"]
+
+# ── Shared dependency versions ──────────────────────────────────────────
+# Pinned here, referenced as `dep.workspace = true` in member crates so the
+# whole tree resolves one version of each. Rationale for each choice lives
+# in DESIGN.md §Dependencies.
+[workspace.dependencies]
+# Search: the BurntSushi grep family — the engine *behind* ripgrep, used
+# in-process. This is the entire reason for the Rust port (no subprocess rg).
+grep-searcher = "0.1"
+grep-regex = "0.1"
+grep-matcher = "0.1"
+# Directory walking with .gitignore semantics (also a BurntSushi crate;
+# the same walker ripgrep uses).
+ignore = "0.4"
+# Glob matching for `--in '**/*.ts'` style inputs.
+globset = "0.4"
+# Serialization — the compat boundary is JSON; serde is non-negotiable.
+serde = { version = "1", features = ["derive"] }
+# preserve_order: `serde_json::Value`/`json!` maps keep insertion order
+# instead of alphabetizing — required for tool-spec byte parity (the v0.x
+# object-literal key order is load-bearing). Also keeps dispatcher JSON
+# (graph/prune) in the intended order.
+serde_json = { version = "1", features = ["preserve_order"] }
+# Insertion-ordered map — the palace `stashes` object must preserve key
+# order to byte-match JS object `JSON.stringify` output.
+indexmap = { version = "2", features = ["serde"] }
+# Async runtime for the long-running server transports (stdio + HTTP).
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time"] }
+# HTTP server transport.
+axum = "0.7"
+# URL source fetching (rustls to avoid a system OpenSSL dependency).
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+# Hashing for palace content-staleness (SHA1, matching v0.x's 12-hex anchor).
+sha1 = "0.10"
+# Data parallelism for multi-file search (rg's speed is parallelism). Used
+# to fan the per-file read+regex across cores; results re-ordered
+# deterministically afterward so output stays stable.
+rayon = "1"
+# Error ergonomics.
+anyhow = "1"
+thiserror = "2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

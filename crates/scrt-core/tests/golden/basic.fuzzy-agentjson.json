@@ -1,0 +1,52 @@
+{
+  "status": "ok",
+  "pattern": "TODO",
+  "n_literal_matches": 2,
+  "n_fuzzy_matches": 0,
+  "fallback_used": null,
+  "warning": null,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "basic.txt",
+        "type": "file"
+      },
+      "match_line": 2,
+      "start_line": 2,
+      "end_line": 2,
+      "context_before": [],
+      "match_text": "this has TODO in it",
+      "context_after": [],
+      "match_spans": [
+        [
+          9,
+          12
+        ]
+      ],
+      "tokens": 5
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "basic.txt",
+        "type": "file"
+      },
+      "match_line": 4,
+      "start_line": 4,
+      "end_line": 4,
+      "context_before": [],
+      "match_text": "another TODO here",
+      "context_after": [],
+      "match_spans": [
+        [
+          8,
+          11
+        ]
+      ],
+      "tokens": 5
+    }
+  ],
+  "next_suggestion": null,
+  "errors": []
+}

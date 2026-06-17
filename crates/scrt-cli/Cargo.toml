@@ -1,0 +1,35 @@
+[package]
+name = "scrt-cli"
+description = "scrt command-line binary"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+# The installed binary is `scrt`, not `scrt-cli`.
+[[bin]]
+name = "scrt"
+path = "src/main.rs"
+
+[dependencies]
+scrt-core = { path = "../scrt-core", features = ["url-source"] }
+scrt-server = { path = "../scrt-server" }
+# Self-evolution spike. The CLI links the corpus/config surface (no ML);
+# `scrt evolve train` requires building the CLI with `--features evolve-train`
+# which turns on scrt-evolve's heavy `train` feature.
+scrt-evolve = { path = "../scrt-evolve" }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+# Runtime for `--serve` / `--serve-http` (the long-running transports).
+tokio = { workspace = true }
+# `--ls` / `--tree` lists files via the ignore walker (no rg subprocess).
+ignore.workspace = true
+
+[features]
+default = []
+# Opt into the candle-backed adapter training (`scrt evolve train`). Off by
+# default so a normal `cargo build` of the CLI never compiles the ML stack.
+evolve-train = ["scrt-evolve/train"]

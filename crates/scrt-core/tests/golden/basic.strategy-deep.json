@@ -1,0 +1,17 @@
+{
+  "pattern": "TODO",
+  "effort": "normal",
+  "strategy": "deep",
+  "status": "no_matches",
+  "total_nodes": 0,
+  "total_tokens": 0,
+  "page_tokens": 0,
+  "sources_count": 0,
+  "truncated": true,
+  "nodes": [],
+  "duration_ms": 0,
+  "before_tokens": 500,
+  "after_tokens": 500,
+  "max_nodes": 30,
+  "max_tokens": 12
+}

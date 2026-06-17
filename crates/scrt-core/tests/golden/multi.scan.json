@@ -1,0 +1,68 @@
+{
+  "pattern": "ab",
+  "effort": "scan",
+  "strategy": "fill",
+  "status": "ok",
+  "total_nodes": 2,
+  "total_tokens": 29,
+  "page_tokens": 29,
+  "sources_count": 1,
+  "truncated": false,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "multi.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 5,
+      "context_before": [],
+      "match_text": "ab cd ab",
+      "context_after": [
+        "plain line",
+        "xx ab yy ab zz",
+        "final",
+        ""
+      ],
+      "match_spans": [
+        [
+          0,
+          2
+        ]
+      ],
+      "tokens": 14
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "multi.txt",
+        "type": "file"
+      },
+      "match_line": 3,
+      "start_line": 1,
+      "end_line": 5,
+      "context_before": [
+        "ab cd ab",
+        "plain line"
+      ],
+      "match_text": "xx ab yy ab zz",
+      "context_after": [
+        "final",
+        ""
+      ],
+      "match_spans": [
+        [
+          3,
+          5
+        ]
+      ],
+      "tokens": 15
+    }
+  ],
+  "duration_ms": 0,
+  "before_tokens": 20,
+  "after_tokens": 20,
+  "max_nodes": 100000
+}

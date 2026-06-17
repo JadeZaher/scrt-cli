@@ -1,0 +1,57 @@
+{
+  "pattern": "Provider",
+  "effort": "scan",
+  "strategy": "fill",
+  "status": "ok",
+  "total_nodes": 2,
+  "total_tokens": 7,
+  "page_tokens": 7,
+  "sources_count": 1,
+  "truncated": false,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "context_before": [],
+      "match_text": "…he Provider co…",
+      "context_after": [],
+      "match_spans": [
+        [
+          4,
+          12
+        ]
+      ],
+      "tokens": 4
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 5,
+      "start_line": 5,
+      "end_line": 5,
+      "context_before": [],
+      "match_text": "Provider ag…",
+      "context_after": [],
+      "match_spans": [
+        [
+          0,
+          8
+        ]
+      ],
+      "tokens": 3
+    }
+  ],
+  "duration_ms": 0,
+  "before_tokens": 20,
+  "after_tokens": 20,
+  "max_nodes": 100000
+}

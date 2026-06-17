@@ -1,0 +1,52 @@
+{
+  "status": "ok",
+  "pattern": "ab",
+  "n_literal_matches": 2,
+  "n_fuzzy_matches": 0,
+  "fallback_used": null,
+  "warning": null,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "multi.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "context_before": [],
+      "match_text": "ab cd ab",
+      "context_after": [],
+      "match_spans": [
+        [
+          0,
+          2
+        ]
+      ],
+      "tokens": 2
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "multi.txt",
+        "type": "file"
+      },
+      "match_line": 3,
+      "start_line": 3,
+      "end_line": 3,
+      "context_before": [],
+      "match_text": "xx ab yy ab zz",
+      "context_after": [],
+      "match_spans": [
+        [
+          3,
+          5
+        ]
+      ],
+      "tokens": 4
+    }
+  ],
+  "next_suggestion": null,
+  "errors": []
+}

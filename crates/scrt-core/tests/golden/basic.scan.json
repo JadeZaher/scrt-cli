@@ -1,0 +1,71 @@
+{
+  "pattern": "TODO",
+  "effort": "scan",
+  "strategy": "fill",
+  "status": "ok",
+  "total_nodes": 2,
+  "total_tokens": 46,
+  "page_tokens": 46,
+  "sources_count": 1,
+  "truncated": false,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "basic.txt",
+        "type": "file"
+      },
+      "match_line": 2,
+      "start_line": 1,
+      "end_line": 6,
+      "context_before": [
+        "line one"
+      ],
+      "match_text": "this has TODO in it",
+      "context_after": [
+        "line three",
+        "another TODO here",
+        "last line",
+        ""
+      ],
+      "match_spans": [
+        [
+          9,
+          13
+        ]
+      ],
+      "tokens": 23
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "basic.txt",
+        "type": "file"
+      },
+      "match_line": 4,
+      "start_line": 1,
+      "end_line": 6,
+      "context_before": [
+        "line one",
+        "this has TODO in it",
+        "line three"
+      ],
+      "match_text": "another TODO here",
+      "context_after": [
+        "last line",
+        ""
+      ],
+      "match_spans": [
+        [
+          8,
+          12
+        ]
+      ],
+      "tokens": 23
+    }
+  ],
+  "duration_ms": 0,
+  "before_tokens": 20,
+  "after_tokens": 20,
+  "max_nodes": 100000
+}

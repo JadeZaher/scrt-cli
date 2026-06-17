@@ -1,0 +1,4 @@
+fn alpha() {}
+// TODO refactor alpha
+fn beta() {}
+let x = alpha();

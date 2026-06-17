@@ -1,0 +1,31 @@
+[package]
+name = "scrt-evolve"
+description = "scrt self-evolution spike: distill a palace's stashes into a per-agent retrieval signal (v2 exploratory)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+scrt-core = { path = "../scrt-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# TOML config (.scrt/evolve.toml). Light, always-on.
+toml = "0.8"
+thiserror = { workspace = true }
+
+# ── Heavy ML stack — feature-gated so a default build never pulls it ────
+# The corpus-export + config surface compiles WITHOUT these; only the
+# actual PEFT training loop needs candle. `--features train` opts in.
+candle-core = { version = "0.8", optional = true }
+candle-nn = { version = "0.8", optional = true }
+safetensors = { version = "0.4", optional = true }
+tokenizers = { version = "0.20", optional = true }
+
+[features]
+default = []
+# Enables the candle-backed adapter training loop + safetensors I/O.
+# Off by default: a plain workspace build does NOT compile the ML stack.
+train = ["dep:candle-core", "dep:candle-nn", "dep:safetensors", "dep:tokenizers"]

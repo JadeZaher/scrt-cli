@@ -1,0 +1,21 @@
+[package]
+name = "scrt-server"
+description = "scrt long-running engine: stdio NDJSON + HTTP transports over a shared dispatcher"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+scrt-core = { path = "../scrt-core", features = ["url-source"] }
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+axum.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+# Router unit tests use tower's `oneshot`.
+tower = { version = "0.5", features = ["util"] }

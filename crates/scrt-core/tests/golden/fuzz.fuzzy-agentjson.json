@@ -1,0 +1,92 @@
+{
+  "status": "ok",
+  "pattern": "Provider",
+  "n_literal_matches": 4,
+  "n_fuzzy_matches": 0,
+  "fallback_used": null,
+  "warning": null,
+  "nodes": [
+    {
+      "id": 1,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "context_before": [],
+      "match_text": "the Provider conf…",
+      "context_after": [],
+      "match_spans": [
+        [
+          4,
+          7
+        ]
+      ],
+      "tokens": 5
+    },
+    {
+      "id": 2,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 2,
+      "start_line": 2,
+      "end_line": 2,
+      "context_before": [],
+      "match_text": "call Provdier now",
+      "context_after": [],
+      "match_spans": [
+        [
+          5,
+          8
+        ]
+      ],
+      "tokens": 5
+    },
+    {
+      "id": 3,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 3,
+      "start_line": 3,
+      "end_line": 3,
+      "context_before": [],
+      "match_text": "Provier too",
+      "context_after": [],
+      "match_spans": [
+        [
+          0,
+          3
+        ]
+      ],
+      "tokens": 3
+    },
+    {
+      "id": 4,
+      "source": {
+        "id": "fuzz.txt",
+        "type": "file"
+      },
+      "match_line": 5,
+      "start_line": 5,
+      "end_line": 5,
+      "context_before": [],
+      "match_text": "Provider agai…",
+      "context_after": [],
+      "match_spans": [
+        [
+          0,
+          3
+        ]
+      ],
+      "tokens": 4
+    }
+  ],
+  "next_suggestion": null,
+  "errors": []
+}
