@@ -261,7 +261,7 @@ pub fn search_with_meta(config: &SearchConfig) -> Result<(SearchResult, SearchMe
     let mut seen_lines: HashSet<String> = HashSet::new();
     let mut content_cache: HashMap<String, String> = HashMap::new();
 
-    'outer: for (rs, matches) in resolved.iter().zip(per_source.into_iter()) {
+    'outer: for (rs, matches) in resolved.iter().zip(per_source) {
         for m in matches {
             if all_nodes.len() >= config.max_nodes {
                 break 'outer;
