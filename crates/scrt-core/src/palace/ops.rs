@@ -411,12 +411,29 @@ pub fn drop_stash(palace: &mut Palace, name: &str) -> bool {
     palace.stashes.shift_remove(name).is_some()
 }
 
-/// List stashes, optionally filtered to those carrying ALL `tag_filter` tags.
-pub fn list_stashes<'a>(palace: &'a Palace, tag_filter: &[String]) -> Vec<&'a Stash> {
+/// List stashes, optionally filtered to those carrying ALL `tag_filter` tags
+/// and (if `search` is given) whose name, note, search pattern, or any tag
+/// contains the query as a case-insensitive substring. Both filters compose:
+/// a stash must satisfy the tags AND the search to be listed.
+pub fn list_stashes<'a>(
+    palace: &'a Palace,
+    tag_filter: &[String],
+    search: Option<&str>,
+) -> Vec<&'a Stash> {
+    let needle = search.map(|q| q.to_lowercase());
     palace
         .stashes
         .values()
         .filter(|s| tag_filter.is_empty() || tag_filter.iter().all(|t| s.tags.contains(t)))
+        .filter(|s| match &needle {
+            None => true,
+            Some(q) => {
+                s.name.to_lowercase().contains(q)
+                    || s.note.to_lowercase().contains(q)
+                    || s.search.pattern.to_lowercase().contains(q)
+                    || s.tags.iter().any(|t| t.to_lowercase().contains(q))
+            }
+        })
         .collect()
 }
 
@@ -608,6 +625,51 @@ mod tests {
         .unwrap();
         assert_eq!(act, StashAction::Merged);
         assert_eq!(p.stashes["s"].nodes.len(), 3);
+    }
+
+    #[test]
+    fn list_stashes_search_matches_name_note_pattern_tag() {
+        let clock = FixedClock(1000);
+        let mut p = Palace::empty();
+        let n = vec![node("a.txt", 1)];
+
+        // name carries "auth"
+        add_stash(&mut p, &clock, "auth-flow", "login screen", &n,
+            StashSearch { pattern: "fn".into(), effort: "normal".into(), sources_count: 1 },
+            &["a.txt".into()], &["security".into()], &StashOptions::default()).unwrap();
+        // note carries "billing"
+        add_stash(&mut p, &clock, "widget", "handles billing totals", &n,
+            StashSearch { pattern: "struct".into(), effort: "normal".into(), sources_count: 1 },
+            &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+        // search pattern carries "regex"
+        add_stash(&mut p, &clock, "parser", "tokenizer", &n,
+            StashSearch { pattern: "regex_compile".into(), effort: "normal".into(), sources_count: 1 },
+            &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+
+        let names = |q: Option<&str>, tags: &[String]| {
+            let mut v: Vec<String> =
+                list_stashes(&p, tags, q).iter().map(|s| s.name.clone()).collect();
+            v.sort();
+            v
+        };
+
+        // None → everything
+        assert_eq!(names(None, &[]).len(), 3);
+        // name match
+        assert_eq!(names(Some("auth"), &[]), vec!["auth-flow"]);
+        // note match
+        assert_eq!(names(Some("billing"), &[]), vec!["widget"]);
+        // pattern match
+        assert_eq!(names(Some("regex"), &[]), vec!["parser"]);
+        // tag match
+        assert_eq!(names(Some("security"), &[]), vec!["auth-flow"]);
+        // case-insensitive both directions
+        assert_eq!(names(Some("LOGIN"), &[]), vec!["auth-flow"]);
+        // no match → empty
+        assert!(names(Some("zzznope"), &[]).is_empty());
+        // composes with tag filter: search "a.txt" hits all, but tag narrows to one
+        assert_eq!(names(Some("tokenizer"), &["security".into()]), Vec::<String>::new());
+        assert_eq!(names(Some("login"), &["security".into()]), vec!["auth-flow"]);
     }
 
     #[test]

@@ -224,8 +224,9 @@ pub fn dispatch(method: &str, params: &Value) -> Result<Value, ServerError> {
         // ── Palace: list ────────────────────────────────────────────────
         "palace.list" => {
             let tags = as_str_array_either(params, "tag_filter", "tags");
+            let search = as_str(params, "search");
             let palace = FilePalace::load(palace_path(params), &SystemClock);
-            let stashes = list_stashes(palace.data(), &tags);
+            let stashes = list_stashes(palace.data(), &tags, search.as_deref());
             serde_json::to_value(stashes).map_err(|e| ServerError::internal(e.to_string()))
         }
 

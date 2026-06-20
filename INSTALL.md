@@ -69,14 +69,14 @@ scrt tool-spec --format gemini    > tools/scrt-gemini.json
 | :--- | :--- |
 | `scrt_search` | Token-budgeted search → context nodes with `file:line` attribution |
 | `scrt_stash` | Save a result to the mind palace (suggests links to related stashes) |
-| `scrt_list_stashes` | List stashes, filterable by tag |
+| `scrt_list_stashes` | List stashes, filterable by `tag_filter` and/or a free-text `search` (name/note/pattern/tag substring) |
 | `scrt_get_stash` | Recall one stash (card view by default; `with_nodes` for bodies) |
 | `scrt_drop_stash` | Remove a stash |
 | `scrt_similar` | Rank stashes by similarity to a stash or term — discover prior work + links |
 
-The first five are inherited from `mpg` (same names, so migrating harnesses
-keep working); `scrt_similar` is scrt's extension for similarity / link
-discovery.
+Tool names are stable across the Node `mpg` lineage, so a harness migrating
+from mpg keeps working unchanged; `scrt_similar` is scrt's own tool for
+similarity / link discovery.
 
 ---
 
@@ -368,7 +368,7 @@ curl -s http://127.0.0.1:17317/ -d '{"method":"palace.similar","params":{"name":
 | Method | Description |
 | :--- | :--- |
 | `search` | Token-budgeted search (mirrors the CLI search flags) |
-| `palace.list` / `palace.get` / `palace.stash` / `palace.drop` | Core stash ops |
+| `palace.list` / `palace.get` / `palace.stash` / `palace.drop` | Core stash ops (`palace.list` takes `tag_filter` + `search`) |
 | `palace.compose` / `palace.intersect` / `palace.except` | Set ops over stash file-sets |
 | `palace.link` / `palace.graph` | Relations + graph traversal |
 | `palace.similar` | Rank stashes by similarity (`name` or `term`, `match`, `score`, `top`) |

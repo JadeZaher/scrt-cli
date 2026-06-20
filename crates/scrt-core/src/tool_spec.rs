@@ -82,8 +82,8 @@ fn tools() -> Vec<Value> {
         }),
         json!({
             "name": "scrt_list_stashes",
-            "description": "List all named mind-palace slots. Filter by tags. Use before composing or re-searching to see what's already captured.",
-            "parameters": { "type": "object", "properties": { "tag_filter": { "type": "array", "items": { "type": "string" }, "description": "Only return stashes carrying all of these tags." }, "palace_path": { "type": "string", "description": "Override palace file path." } }, "required": [] }
+            "description": "List all named mind-palace slots. Filter by tags and/or a free-text search. Use before composing or re-searching to see what's already captured.",
+            "parameters": { "type": "object", "properties": { "tag_filter": { "type": "array", "items": { "type": "string" }, "description": "Only return stashes carrying all of these tags." }, "search": { "type": "string", "description": "Only return stashes whose name, note, search pattern, or any tag contains this text (case-insensitive substring). Composes with tag_filter." }, "palace_path": { "type": "string", "description": "Override palace file path." } }, "required": [] }
         }),
         json!({
             "name": "scrt_get_stash",

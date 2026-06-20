@@ -102,7 +102,11 @@ pub fn handle_palace_only(raw: &RawArgs) -> Result<Option<i32>, AppError> {
         if expired.removed > 0 {
             save(&mut palace)?;
         }
-        let stashes = list_stashes(palace.data(), &raw.mp_list_tags);
+        let stashes = list_stashes(
+            palace.data(),
+            &raw.mp_list_tags,
+            raw.mp_list_search.as_deref(),
+        );
         print!("{}", format_list(&stashes, &path.to_string_lossy()));
         println!();
         return Ok(Some(0));

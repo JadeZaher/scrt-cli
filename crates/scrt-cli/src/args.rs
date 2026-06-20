@@ -50,6 +50,7 @@ pub struct RawArgs {
     pub mp_stash_locations: bool,
     pub mp_list: bool,
     pub mp_list_tags: Vec<String>,
+    pub mp_list_search: Option<String>,
     pub mp_get: Option<String>,
     pub mp_get_with_nodes: bool,
     pub mp_drop: Option<String>,
@@ -263,6 +264,10 @@ pub fn parse(argv: &[String]) -> Result<RawArgs, ParseError> {
                 i += 1;
                 a.mp_list_tags
                     .push(require("--mp-list-tag", argv, i)?.clone());
+            }
+            "--mp-list-search" | "--mp-find" => {
+                i += 1;
+                a.mp_list_search = Some(require("--mp-list-search", argv, i)?.clone());
             }
             "--mp-get" => {
                 i += 1;
@@ -564,6 +569,7 @@ MIND PALACE\n\
       --link-threshold <0-100>   min relevance to suggest a link (default 55)\n\
       --mp-tag <tag>             tag a stash (repeatable)\n\
       --mp-list / --mp-get <n>   inspect stashes\n\
+      --mp-list-search <text>    filter --mp-list by name/note/pattern/tag (alias --mp-find)\n\
       --mp-drop <name>           remove a stash\n\
       --mp-from / --mp-compose / --mp-intersect / --mp-except\n\
       --mp-link / --mp-graph / --mp-related\n\

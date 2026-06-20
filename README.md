@@ -7,19 +7,25 @@
 **processing engine for grounded generative context**: token-budgeted
 **context-node** retrieval, an instantiable **mind palace** of saved
 results, and **lexical similarity / link discovery** over that palace —
-embeddable in-process in Node and Python harnesses.
+usable as a CLI, a warm stdio/HTTP service, or embedded in-process in
+Node and Python harnesses.
 
-It began as a Rust port of [`mind-palace-graph`](../mind-palace-graph)
-(the Node `mpg` CLI) and keeps its palace file format and `MPG_*` env
-vars for drop-in migration. **As of the 2026-06 direction shift, scrt is
-its own product** — it ships its own Node and Python packages over the
-Rust core and extends the surface beyond mpg (e.g. similarity retrieval).
-Byte-for-byte mpg parity is no longer a design goal.
+The problem it solves: feeding an LLM raw search hits, command output, or
+fetched pages burns the context window on text you don't need. scrt sizes
+every result in **tokens, not lines**, attributes it to `file:line`, and
+lets you stash the useful parts into a persistent mind palace that
+survives compaction and session boundaries — so long-horizon work recalls
+prior findings instead of re-searching for them.
 
 > **Status: implemented.** Search, mind palace, transports (stdio / HTTP
 > / NAPI / PyO3), CLI, similarity + link-suggestions are built and tested.
 > The **semantic** tier — a trained embedding model — lives in a separate
 > project, [scrt-evolve](../scrt-evolve), which consumes this engine.
+
+> **Coming from Node `mpg`?** scrt is a Rust engine that reads the same
+> palace file format and honours the `MPG_*` env vars, so migration is
+> drop-in. See [MIGRATION.md](./MIGRATION.md). Byte-for-byte mpg parity is
+> no longer a design goal — scrt is its own product with its own surface.
 
 ## Why Rust
 
@@ -51,14 +57,23 @@ Effort presets size the per-node window + node cap (`scan` / `normal` /
 ```bash
 scrt "auth" --in src/ --mp-stash auth-login "auth + rate limiting"  # save a result
 scrt --mp-list                         # what's captured
+scrt --mp-list --mp-list-search auth   # filter the listing by name/note/pattern/tag
+scrt --mp-list --mp-list-tag security  # filter the listing by tag
 scrt --mp-get auth-login --full        # recall (card view by default)
 scrt "x" --in . --mp-from auth-login   # re-scope a search to a stash's files (~3× cheaper)
 scrt --mp-link auth-login rate-limiter see-also   # connect two stashes
 scrt --mp-prune-expired                # housekeeping
 ```
 
-Stashes survive compaction and session boundaries; the on-disk format is
-byte-compatible with Node mpg.
+`--mp-list-search <text>` (alias `--mp-find`) keeps only stashes whose
+**name, note, search pattern, or any tag** contains the text
+(case-insensitive substring); it composes with `--mp-list-tag`. Use it to
+find a stash by intent when the palace has grown past a glance. For
+*ranked* fuzzy discovery rather than a substring filter, see
+[Similarity & link discovery](#similarity--link-discovery) below.
+
+Stashes survive compaction and session boundaries; the on-disk format
+round-trips with Node mpg.
 
 ### Similarity & link discovery
 
@@ -117,9 +132,10 @@ in-process — see `crates/scrt-napi` and `crates/scrt-py`.
 
 `scrt tool-spec` emits six function-calling tools (OpenAI / Anthropic /
 Gemini shapes): `scrt_search`, `scrt_stash`, `scrt_list_stashes`,
-`scrt_get_stash`, `scrt_drop_stash`, and **`scrt_similar`**. The five
-mpg-inherited tools keep their names so migrating agents keep working;
-`scrt_similar` is the scrt extension for ranking/link discovery.
+`scrt_get_stash`, `scrt_drop_stash`, and `scrt_similar`.
+`scrt_list_stashes` takes `tag_filter` and a free-text `search` to narrow
+the listing the same way the `--mp-list-search` flag does. Tool names are
+stable, so agents migrating from Node mpg keep working unchanged.
 
 ## Documents
 

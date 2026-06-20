@@ -117,9 +117,13 @@ scrt ... --mp-stash <name> --mp-ttl 4h  --mp-tag scan      # scratch
 scrt ... --mp-stash <name> --mp-ttl 24h --mp-tag finding   # keep a day
 scrt --mp-prune-tag scan                                   # drop scratch, keep findings
 scrt --mp-prune-expired                                    # session open: drop expired
+scrt --mp-list --mp-list-search auth                       # find a stash by intent (name/note/pattern/tag)
 ```
 Budget: ≤20 active stashes per palace; one palace per task via
-`MPG_MIND_PALACE`.
+`MPG_MIND_PALACE`. When the palace grows past a glance, narrow
+`--mp-list` with `--mp-list-search <text>` (alias `--mp-find`,
+case-insensitive substring over name/note/pattern/tag) and/or
+`--mp-list-tag <tag>` instead of scrolling the full listing.
 
 ## Similarity & link discovery (`scrt_similar`)
 
