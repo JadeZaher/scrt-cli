@@ -634,21 +634,62 @@ mod tests {
         let n = vec![node("a.txt", 1)];
 
         // name carries "auth"
-        add_stash(&mut p, &clock, "auth-flow", "login screen", &n,
-            StashSearch { pattern: "fn".into(), effort: "normal".into(), sources_count: 1 },
-            &["a.txt".into()], &["security".into()], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "auth-flow",
+            "login screen",
+            &n,
+            StashSearch {
+                pattern: "fn".into(),
+                effort: "normal".into(),
+                sources_count: 1,
+            },
+            &["a.txt".into()],
+            &["security".into()],
+            &StashOptions::default(),
+        )
+        .unwrap();
         // note carries "billing"
-        add_stash(&mut p, &clock, "widget", "handles billing totals", &n,
-            StashSearch { pattern: "struct".into(), effort: "normal".into(), sources_count: 1 },
-            &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "widget",
+            "handles billing totals",
+            &n,
+            StashSearch {
+                pattern: "struct".into(),
+                effort: "normal".into(),
+                sources_count: 1,
+            },
+            &["a.txt".into()],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
         // search pattern carries "regex"
-        add_stash(&mut p, &clock, "parser", "tokenizer", &n,
-            StashSearch { pattern: "regex_compile".into(), effort: "normal".into(), sources_count: 1 },
-            &["a.txt".into()], &[], &StashOptions::default()).unwrap();
+        add_stash(
+            &mut p,
+            &clock,
+            "parser",
+            "tokenizer",
+            &n,
+            StashSearch {
+                pattern: "regex_compile".into(),
+                effort: "normal".into(),
+                sources_count: 1,
+            },
+            &["a.txt".into()],
+            &[],
+            &StashOptions::default(),
+        )
+        .unwrap();
 
         let names = |q: Option<&str>, tags: &[String]| {
-            let mut v: Vec<String> =
-                list_stashes(&p, tags, q).iter().map(|s| s.name.clone()).collect();
+            let mut v: Vec<String> = list_stashes(&p, tags, q)
+                .iter()
+                .map(|s| s.name.clone())
+                .collect();
             v.sort();
             v
         };
@@ -668,8 +709,14 @@ mod tests {
         // no match → empty
         assert!(names(Some("zzznope"), &[]).is_empty());
         // composes with tag filter: search "a.txt" hits all, but tag narrows to one
-        assert_eq!(names(Some("tokenizer"), &["security".into()]), Vec::<String>::new());
-        assert_eq!(names(Some("login"), &["security".into()]), vec!["auth-flow"]);
+        assert_eq!(
+            names(Some("tokenizer"), &["security".into()]),
+            Vec::<String>::new()
+        );
+        assert_eq!(
+            names(Some("login"), &["security".into()]),
+            vec!["auth-flow"]
+        );
     }
 
     #[test]

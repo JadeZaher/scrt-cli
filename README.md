@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./scrtlogo.jpg" alt="scrt logo" width="240">
+</p>
+
 # scrt
 
 [![CI](https://github.com/JadeZaher/scrt-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/JadeZaher/scrt-cli/actions/workflows/ci.yml)
