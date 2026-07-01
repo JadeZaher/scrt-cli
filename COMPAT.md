@@ -412,6 +412,27 @@ configs and palace files resolve without migration.
 > on **both** sides before diffing, and asserts byte-equality on
 > everything else. The on-disk palace is **not** touched by branding at all.
 
+### Intentional divergence — `llm` node framing
+
+The `llm` format's **node framing** deliberately departs from v0.x to cut
+token overhead (the block tag and all metadata are preserved — only the
+decoration changed):
+
+| Element | v0.x | scrt |
+| :--- | :--- | :--- |
+| node header | `--- NODE N of M \| file:line \| ~T tokens ---` | `§N file:line ~Tt` |
+| blank separator before each node | yes | folded into the `§` sigil |
+| context-line gutter | per-line absolute number | bare gutter (match line keeps its number) |
+| match marker | `>>` | `›` |
+| match highlight | `**hit**` | `«hit»` |
+| total footer | `--- TOTAL --- ` + stats | `Σ ` + stats |
+
+This is **not** normalized in the parity harness — the checked-in goldens
+only cover `json` / `agent-json` (which carry no brand token and are
+byte-identical to v0.x). The `text` / `markdown` / `json` / `agent-json`
+formats are unchanged. Rationale lives in `crates/scrt-core/src/AGENTS.md`
+§format.
+
 ---
 
 ## Excluded from the parity diff

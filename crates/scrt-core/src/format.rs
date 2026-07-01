@@ -5,13 +5,19 @@
 //! `llm` / `markdown` / `text` are ported here.
 //!
 //! Branding: the `llm` block tag is `<scrt result …>` / `</scrt result>`
-//! (v0.x: `<mpg result …>`). The parity harness normalizes `mpg`↔`scrt`
-//! on the non-JSON formats before diffing (COMPAT.md §Branding).
+//! (v0.x: `<mpg result …>`).
+//!
+//! Node framing (scrt-specific, diverges from v0.x): the `llm` format uses a
+//! compact TOON-style node header `§<id> <file>:<line> ~<tokens>t` instead of
+//! the old `--- NODE N of M | … ---` banner, drops per-line numbers on context
+//! lines (only the match line carries its number + `›` marker), and closes with
+//! a `Σ …` total line instead of `--- TOTAL ---`. This is a deliberate token
+//! reduction; see `src/AGENTS.md` §format for rationale. The `json` /
+//! `agent-json` byte-contract with v0.x is unchanged.
 //!
 //! Color: scrt's formatters emit **no ANSI color** (color is auto-off when
-//! not a TTY, which is every parity/CI run). The v0.x color path is purely
-//! cosmetic and not part of the byte contract; the no-color rendering —
-//! including the `**hit**` match highlight in `llm` — is what we match.
+//! not a TTY, which is every parity/CI run). The no-color rendering —
+//! including the `«hit»` match highlight in `llm` — is what we emit.
 
 pub use crate::envelope::format_agent_json;
 use crate::pagination::PaginationMeta;
@@ -141,52 +147,50 @@ pub fn format_llm(result: &SearchResult) -> String {
     }
     out.push(format!("<scrt result {}>", header.trim()));
 
+    // Node width for the match-line number gutter; context lines use a bare
+    // gutter of the same width so the code column stays aligned.
     for node in &result.nodes {
-        out.push(String::new());
+        // Compact node header: `§<id> <file>:<line> ~<tokens>t` replaces the
+        // `--- NODE N of M | … | ~N tokens ---` banner and its blank separator.
+        // `§` is the boundary sigil, so the leading blank line is dropped too.
+        // `id` / `file:line` / tokens are the load-bearing metadata; the words
+        // `NODE`, `of`, `tokens` and the dashes were pure decoration.
         out.push(format!(
-            "--- NODE {} of {} | {}:{} | ~{} tokens ---",
-            node.id, result.total_nodes, node.source.id, node.match_line, node.tokens
+            "§{} {}:{} ~{}t",
+            node.id, node.source.id, node.match_line, node.tokens
         ));
 
         let width = node.end_line.to_string().len();
-        let pad = |n: u64| format!("{:>width$}", n, width = width);
+        let gutter = " ".repeat(width);
 
-        for (i, line) in node.context_before.iter().enumerate() {
-            out.push(format!(
-                "{} {} {}",
-                pad(node.start_line + i as u64),
-                "  ",
-                line
-            ));
+        // Context lines: bare gutter (no per-line number — the header anchors
+        // the match line and lines are contiguous).
+        for line in &node.context_before {
+            out.push(format!("{gutter}  {line}"));
         }
-        // match line, with **hit** highlight (no-color path).
+        // Match line: keep the absolute line number + `›` marker, with the
+        // `«hit»` highlight (no-color path).
         let (before, hit, after) = if let Some([s, e]) = node.match_spans.first().copied() {
             slice_units(&node.match_text, s, e)
         } else {
             ("", node.match_text.as_str(), "")
         };
         out.push(format!(
-            "{} {} {}**{}**{}",
-            pad(node.match_line),
-            ">>",
+            "{:>width$}› {}«{}»{}",
+            node.match_line,
             before,
             hit,
-            after
+            after,
+            width = width
         ));
-        for (i, line) in node.context_after.iter().enumerate() {
-            out.push(format!(
-                "{} {} {}",
-                pad(node.match_line + 1 + i as u64),
-                "  ",
-                line
-            ));
+        for line in &node.context_after {
+            out.push(format!("{gutter}  {line}"));
         }
     }
 
     out.push(String::new());
-    out.push("--- TOTAL ---".to_string());
     out.push(format!(
-        "{} node{} | ~{} tokens | {} source{} | {}ms",
+        "Σ {} node{} | ~{} tokens | {} source{} | {}ms",
         result.total_nodes,
         plural(result.total_nodes),
         result.total_tokens,
@@ -340,9 +344,11 @@ mod tests {
         assert!(s.starts_with("<scrt result "));
         assert!(s.ends_with("</scrt result>"));
         assert!(s.contains("status=ok"));
-        assert!(s.contains(">> x **TODO** y"));
-        assert!(s.contains("--- TOTAL ---"));
-        assert!(s.contains("1 node | ~5 tokens | 1 source | 0ms"));
+        // Compact node header + `«hit»` highlight on the match line.
+        assert!(s.contains("§1 a.ts:2 ~5t"));
+        assert!(s.contains("2› x «TODO» y"));
+        // Compact total line.
+        assert!(s.contains("Σ 1 node | ~5 tokens | 1 source | 0ms"));
     }
 
     #[test]
